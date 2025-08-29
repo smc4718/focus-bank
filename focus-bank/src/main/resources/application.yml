@@ -1,0 +1,36 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: focus-bank   # 애플리케이션 이름 (Actuator, 로그 등에서 사용)
+
+  jackson:             # JSON 직렬화/역직렬화 설정
+    time-zone: Asia/Seoul
+    serialization:
+      write-dates-as-timestamps: false   # 날짜를 숫자(타임스탬프) 대신 ISO-8601 문자열로 처리
+
+  messages:
+    encoding: UTF-8
+
+  thymeleaf:
+    cache: false       # 템플릿 캐시 비활성화 (개발 시 바로 반영)
+
+  mvc:                 # 날짜 포맷 통일
+    format:
+      date: yyyy-MM-dd
+      date-time: yyyy-MM-dd'T'HH:mm:ss
+
+server:
+  port: 8080
+
+
+# Actuator 관리용 엔드포인트
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics   # health, info, metrics 엔드포인트 노출
+  endpoint:
+    health:
+      show-details: always             # 상세정보 항상 표시
+      show-components: always          # (Spring Boot 3.4+) 각 컴포넌트도 표시

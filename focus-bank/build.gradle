@@ -18,16 +18,41 @@ repositories {
 	mavenCentral()
 }
 
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Web, View
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// 개발 전용 툴킷
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Actuator (헬스/메트릭) 앱 상태 모니터링 및 관리
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Data (MyBatis + MariaDB)
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.5'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	//테스트에서 lombok 사용
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {

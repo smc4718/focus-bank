@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/focusbank?useUnicode=true&characterEncoding=utf8
+    username: fb
+    password: 1735
+    driver-class-name: org.mariadb.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 10        # 최대 커넥션 수
+      minimum-idle: 2              # 최소 유지 커넥션 수
+      initialization-fail-timeout: 0  # DB 연결 실패 시에도 애플리케이션 부팅 계속 시도
+
+mybatis: # 기존 mybatis-config.xml 파일 대체
+  mapper-locations: classpath:mapper/*.xml  # MyBatis 매퍼 XML 경로
+  type-aliases-package: com.pyj.focusbank.dto
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    root: INFO
+    com.focusbank: DEBUG   # 프로젝트 로그는 DEBUG까지 보기
