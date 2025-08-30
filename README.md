@@ -14,7 +14,7 @@
 - Spring Boot Actuator
 - (추가 예정) Redis, Scheduler/Batch, JWT, ZXing, Prometheus/Grafana
 
-## DB 스키마 초안
+## DB 스키마 초안 (변동 예정)
 - anonymous_user: 익명 사용자
 - focus_session: 집중 세션 기록
 - daily_aggregate: 일별 총합
