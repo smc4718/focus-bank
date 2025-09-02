@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pyj.focusbank.dao.SessionMapper">
+
+    <!-- 열린 세션 조회 -->
+    <select id="findOpenByAnon" parameterType="string" resultType="FocusSessionDto">
+        SELECT
+            session_id,
+            anon_id,
+            started_at,
+            ended_at,
+            duration_sec,
+            created_at
+         FROM focus_session
+        WHERE anon_id = #{anonId} AND ended_at IS NULL
+        ORDER BY started_at DESC
+            LIMIT 1
+    </select>
+
+    <!-- 집중 시작 -->
+    <insert id="startFocus" parameterType="string">
+        INSERT INTO focus_session (anon_id, started_at, created_at)
+        VALUES (#{anonId}, NOW(), NOW())
+    </insert>
+
+    <!-- 집중 종료 -->
+    <update id="endFocus" parameterType="long">
+        UPDATE focus_session
+           SET ended_at = NOW(),
+               duration_sec = TIMESTAMPDIFF(SECOND, started_at, NOW())
+         WHERE session_id = #{sessionId}
+           AND ended_at IS NULL
+    </update>
+
+    <!-- 종료 후 일별 집계 갱신 -->
+    <update id="updateDailyAggregate" parameterType="long">
+        INSERT INTO daily_aggregate (target_date, anon_id, total_seconds)
+        SELECT DATE(started_at), anon_id, duration_sec
+          FROM focus_session
+         WHERE session_id = #{sessionId}
+           AND duration_sec IS NOT NULL
+            ON DUPLICATE KEY UPDATE
+                             total_seconds = total_seconds + VALUES(total_seconds)
+    </update>
+
+    <!-- 단건 조회 -->
+    <select id="findById" parameterType="long" resultType="FocusSessionDto">
+        SELECT
+            session_id,
+            anon_id,
+            started_at,
+            ended_at,
+            duration_sec,
+            created_at
+         FROM focus_session
+        WHERE session_id = #{sessionId}
+    </select>
+
+</mapper>
