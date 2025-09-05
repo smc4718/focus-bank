@@ -128,7 +128,18 @@
                 method: 'POST',
                 headers: { 'X-ANON-ID': anonId }
             });
-            if (!res.ok) throw new Error(await res.text());
+
+            if (res.status === 409) {
+                // 백엔드에서 Conflict 응답 (이미 열린 세션)
+                showToast('이미 진행 중인 세션이 있습니다.', true);
+                btnDeposit.disabled = false;
+                return;
+            }
+
+            if (!res.ok) {
+                throw new Error(await res.text());
+            }
+
             const data = await res.json(); // FocusSessionDto
             currentSessionId = data.sessionId;
             startedAtMs = Date.parse(data.startedAt ?? data.createdAt);
@@ -150,7 +161,18 @@
         try {
             btnWithdraw.disabled = true;
             const res = await fetch(`/api/sessions/withdraw?sessionId=${currentSessionId}`, { method: 'POST' });
-            if (!res.ok) throw new Error(await res.text());
+
+            if (res.status === 409) {
+                // 백엔드에서 Conflict 응답 (이미 종료된 세션)
+                showToast('이미 종료된 세션입니다.', true);
+                btnWithdraw.disabled = false;
+                return;
+            }
+
+            if (!res.ok) {
+                throw new Error(await res.text());
+            }
+
             const data = await res.json();
             stopTick();
             setStatusIdle();

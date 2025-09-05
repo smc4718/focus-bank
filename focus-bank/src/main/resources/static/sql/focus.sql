@@ -1,4 +1,4 @@
--- 익명 사용자
+-- 익명 사용자focusbank
 DROP TABLE IF EXISTS anonymous_user;
 CREATE TABLE anonymous_user (
   anon_id      CHAR(26)    NOT NULL,           					   -- 익명 사용자 식별자 (ULID 26자리)
@@ -41,3 +41,11 @@ CREATE TABLE daily_aggregate (
   KEY idx_da_date_total (target_date, total_seconds DESC) 	-- 날짜별 랭킹 조회 최적화
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;       
 
+
+INSERT INTO anonymous_user (anon_id, created_at)
+VALUES ('anon-GR5E', NOW())
+ON DUPLICATE KEY UPDATE created_at = created_at;
+
+-- (원한다면) 자식 수동 테스트
+INSERT INTO focus_session (anon_id, started_at, created_at)
+VALUES ('anon-GR5E', NOW(), NOW());

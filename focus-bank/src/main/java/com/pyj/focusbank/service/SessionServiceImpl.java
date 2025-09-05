@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class SessionServiceImpl implements SessionService {
@@ -14,35 +16,57 @@ public class SessionServiceImpl implements SessionService {
 
     /**
      * 집중 시작 (입금)
-     * - 사용자의 열린 세션이 있으면 예외
-     * - 없으면 새로 시작하고, 방금 열린 세션을 조회해 반환
+     * 1. anonId 유효성 검사 + 공백 제거
+     * 2. anonymous_user 테이블에 anonId 없으면 생성 (ensure)
+     * 3. focus_session 테이블에 새 세션 기록 (부모 없으면 0행 → 예외)
+     * 4. 방금 열린 세션 정보를 다시 조회해서 반환
+     *
+     * @param anonId 익명 사용자 ID
+     * @return 새로 시작된 세션 정보
      */
-    @Override
     @Transactional
+    @Override
     public FocusSessionDto startFocus(String anonId) {
-        FocusSessionDto open = sessionMapper.findOpenByAnon(anonId);
-        if (open != null) {
-            throw new IllegalStateException("이미 진행 중인 집중이 있어요.");
+        // 1) null/빈값 방어 + 앞뒤 공백 제거
+        anonId = Objects.requireNonNull(anonId, "anonId required").trim();
+
+        // 2) 부모 테이블(anonymous_user)에 anonId가 없으면 생성
+        sessionMapper.ensureAnonUser(anonId);
+
+        // 3) focus_session에 새 세션 기록
+        int affected = sessionMapper.startFocus(anonId);
+        if (affected == 0) {
+            throw new IllegalStateException("anonymous_user에 anonId가 없습니다: " + anonId);
         }
-        sessionMapper.startFocus(anonId);
-        // 방금 열린 세션 재조회(ended_at IS NULL)
+
+        // 4) 방금 열린 세션을 다시 조회해서 리턴
         return sessionMapper.findOpenByAnon(anonId);
     }
 
     /**
      * 집중 종료 (출금)
-     * - 종료 가능한 세션이 없으면 예외
-     * - 종료 후 일일 집계 갱신
-     * - 종료된 세션 정보를 반환
+     * 1. 세션 종료 시각/집중 시간(duration_sec) 업데이트
+     * 2. 업데이트 성공 시 일별 집계 테이블 갱신
+     * 3. 종료된 세션 정보를 조회해서 반환
+     *
+     * @param sessionId 종료할 세션 ID
+     * @return 종료된 세션 정보
      */
-    @Override
     @Transactional
+    @Override
     public FocusSessionDto endFocus(Long sessionId) {
+        // 1) 세션 종료
         int updated = sessionMapper.endFocus(sessionId);
+
+        // 2) 업데이트 없으면 이미 종료 or 없는 세션 → null 반환
         if (updated == 0) {
-            throw new IllegalStateException("종료할 수 있는 세션이 없어요.");
+            return null;
         }
+
+        // 3) 종료된 세션 기준으로 일별 집계 갱신
         sessionMapper.updateDailyAggregate(sessionId);
+
+        // 4) 종료된 세션 정보 리턴
         return sessionMapper.findById(sessionId);
     }
 }

@@ -10,6 +10,9 @@ public interface SessionMapper {
     // 열린(종료되지 않은) 세션 조회
     FocusSessionDto findOpenByAnon(@Param("anonId") String anonId);
 
+    // 새로 추가 (영향 행 수 반환)
+    int ensureAnonUser(@Param("anonId") String anonId);
+
     // 집중 시작 (입금 시작)
     int startFocus(@Param("anonId") String anonId);
 
