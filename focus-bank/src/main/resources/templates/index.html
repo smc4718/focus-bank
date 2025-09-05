@@ -20,8 +20,8 @@
         .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
         button{cursor:pointer;border:none;border-radius:12px;padding:12px 16px;font-weight:700;color:#0b1020;transition:.2s}
         .btn-deposit{background:var(--accent)}
-        .btn-withdraw{background:var(--danger)}
-        .btn-deposit:disabled,.btn-withdraw:disabled{opacity:.5;cursor:not-allowed}
+        .btn-settle{background:var(--danger)}
+        .btn-deposit:disabled,.btn-settle:disabled{opacity:.5;cursor:not-allowed}
         .balance{font-size:28px;font-weight:800;color:#fff}
         .muted{color:var(--muted);font-size:13px}
         .toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.12);padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.2s}
@@ -39,7 +39,7 @@
         <div class="logo">🏦</div>
         <div>
             <h1 style="margin:0;color:#fff;">Focus Bank</h1>
-            <div class="subtitle">집중 시간을 돈처럼 <b>입금/출금</b>하세요</div>
+            <div class="subtitle">집중 시간을 돈처럼 <b>입금/정산</b>하세요</div>
         </div>
     </div>
 
@@ -60,21 +60,19 @@
                 <div id="liveTimer" class="mono timer">00:00:00</div>
             </div>
             <div class="btns">
-                <button id="btnDeposit" class="btn-deposit">입금하기 (집중 시작)</button>
-                <button id="btnWithdraw" class="btn-withdraw" disabled>출금하기 (집중 종료)</button>
+                <button id="btnDeposit" class="btn-deposit">입금하기</button>
+                <button id="btnSettle" class="btn-settle" disabled>정산하기</button>
+
             </div>
             <div class="hero">
-                💡 <span>입금은 집중 시작, 출금은 종료를 의미해요.</span>
+                💡 <span>입금은 집중 시작, 정산은 종료를 의미해요.</span>
             </div>
         </div>
 
         <div class="card">
-            <h2 class="section-title">오늘 요약</h2>
+            <h2 class="section-title">일일 입금된 집중</h2>
             <div class="balance" id="todayTotal">--:--:--</div>
-            <div class="muted">오늘 누적 입금 시간</div>
-            <div style="margin-top:12px" class="muted">
-                * 요약 API를 붙이면 자동 갱신됩니다. (예: <span class="mono">GET /api/reports/summary?date=YYYY-MM-DD</span>)
-            </div>
+            <div class="muted">오늘 누적 집중 시간</div>
         </div>
     </div>
 
@@ -102,7 +100,7 @@
     const statusPill  = document.getElementById('statusPill');
     const liveTimerEl = document.getElementById('liveTimer');
     const btnDeposit  = document.getElementById('btnDeposit');
-    const btnWithdraw = document.getElementById('btnWithdraw');
+    const btnSettle   = document.getElementById('btnSettle');
     const toastEl     = document.getElementById('toast');
     const todayTotal  = document.getElementById('todayTotal');
 
@@ -115,10 +113,10 @@
 
     // 버튼 이벤트
     btnDeposit.addEventListener('click', onDeposit);
-    btnWithdraw.addEventListener('click', onWithdraw);
+    btnSettle.addEventListener('click', onSettle);
 
-    // 초기 요약(선택: 백엔드 구현 후 주석해제)
-    // fetchTodaySummary();
+    // 일일 요약
+    fetchTodaySummary();
 
     // ====== 액션: 입금(집중 시작) ======
     async function onDeposit() {
@@ -152,20 +150,20 @@
         }
     }
 
-    // ====== 액션: 출금(집중 종료) ======
-    async function onWithdraw() {
+    // ====== 액션: 정산(집중 종료) ======
+    async function onSettle() {
         if (!currentSessionId) {
             showToast('진행 중인 입금(집중)이 없습니다.', true);
             return;
         }
         try {
-            btnWithdraw.disabled = true;
-            const res = await fetch(`/api/sessions/withdraw?sessionId=${currentSessionId}`, { method: 'POST' });
+            btnSettle.disabled = true;
+            const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
 
             if (res.status === 409) {
                 // 백엔드에서 Conflict 응답 (이미 종료된 세션)
                 showToast('이미 종료된 세션입니다.', true);
-                btnWithdraw.disabled = false;
+                btnSettle.disabled = false;
                 return;
             }
 
@@ -176,12 +174,12 @@
             const data = await res.json();
             stopTick();
             setStatusIdle();
-            // 선택: 완료 후 오늘 요약 다시 로드
-            // await fetchTodaySummary();
-            showToast(`출금 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
+            // 집중 완료 후 오늘 요약 자동 갱신
+            await fetchTodaySummary();
+            showToast(`정산 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
         } catch (e) {
-            showToast('출금 실패: ' + (e.message || e), true);
-            btnWithdraw.disabled = false;
+            showToast('정산 실패: ' + (e.message || e), true);
+            btnSettle.disabled = false;
         }
     }
 
@@ -190,7 +188,7 @@
         statusPill.textContent = '입금 중';
         statusPill.style.background = 'rgba(34,197,94,.15)';
         statusPill.style.borderColor = 'rgba(34,197,94,.35)';
-        btnWithdraw.disabled = false;
+        btnSettle.disabled = false;
         btnDeposit.disabled = true;
     }
 
@@ -198,7 +196,7 @@
         statusPill.textContent = '대기 중';
         statusPill.style.background = 'rgba(255,255,255,.06)';
         statusPill.style.borderColor = 'rgba(255,255,255,.12)';
-        btnWithdraw.disabled = true;
+        btnSettle.disabled = true;
         btnDeposit.disabled = false;
         liveTimerEl.textContent = '00:00:00';
         currentSessionId = null;
@@ -227,7 +225,7 @@
         if(!id) return 'anon-****';
         const tail = id.slice(-4).toUpperCase();
         return 'anon-' + tail;
-        // 닉네임이 있다면 서버 응답에서 displayName 내려 활용해도 OK
+        // (고려사항 : 닉네임이 있다면 서버 응답에서 displayName 내려 활용해도 좋음)
     }
 
     function fmtSec(s){
@@ -273,7 +271,7 @@
         return timeChars.reverse().join('') + randChars.slice(0,16).join('');
     }
 
-    // (선택) 오늘 요약 API 호출 샘플
+    // 일일 집중 요약 API 호출
     async function fetchTodaySummary(){
         const d = new Date();
         const yyyy = d.getFullYear();

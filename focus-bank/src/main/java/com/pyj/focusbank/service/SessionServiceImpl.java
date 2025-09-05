@@ -44,7 +44,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     /**
-     * 집중 종료 (출금)
+     * 집중 종료 (정산)
      * 1. 세션 종료 시각/집중 시간(duration_sec) 업데이트
      * 2. 업데이트 성공 시 일별 집계 테이블 갱신
      * 3. 종료된 세션 정보를 조회해서 반환

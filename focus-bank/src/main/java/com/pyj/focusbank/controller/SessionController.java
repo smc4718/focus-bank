@@ -40,11 +40,11 @@ public class SessionController {
     }
 
     /**
-     * 집중 종료(출금)
+     * 집중 종료(정산)
      * 쿼리파라미터: sessionId
      */
-    @PostMapping("/withdraw")
-    public ResponseEntity<FocusSessionDto> withdraw(@RequestParam("sessionId") Long sessionId) {
+    @PostMapping("/settle")
+    public ResponseEntity<FocusSessionDto> settle(@RequestParam("sessionId") Long sessionId) {
         FocusSessionDto session = sessionService.endFocus(sessionId);
         if (session == null) {
             // 이미 종료됐거나 없는 세션

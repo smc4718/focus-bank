@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pyj.focusbank.dao.ReportMapper">
+
+    <!-- 일별 집중 시간 요약 조회 -->
+    <select id="findDailySummary" resultType="DailySummaryDto">
+        SELECT DATE_FORMAT(target_date, '%Y-%m-%d') AS targetDate,
+               COALESCE(total_seconds, 0) AS totalSec
+          FROM daily_aggregate
+         WHERE anon_id = #{anonId}
+           AND target_date = #{targetDate}
+    </select>
+
+</mapper>

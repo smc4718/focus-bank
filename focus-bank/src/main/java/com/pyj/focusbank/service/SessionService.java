@@ -12,7 +12,7 @@ public interface SessionService {
     FocusSessionDto startFocus(String anonId);
 
     /**
-     * 집중 종료 (출금)
+     * 집중 종료 (정산)
      * @param sessionId 종료할 세션 ID
      * @return 종료된 세션 정보
      */
