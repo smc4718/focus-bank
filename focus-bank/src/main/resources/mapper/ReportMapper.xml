@@ -14,4 +14,36 @@
            AND target_date = #{targetDate}
     </select>
 
+    <!-- 최근 N주 범위를 [fromDate, toDate]로 넘겨 집계 -->
+    <select id="selectWeeklyAgg" parameterType="map" resultType="FocusAggDto">
+        SELECT
+            CONCAT(
+                    FLOOR(YEARWEEK(da.target_date, 3) / 100),
+                    '-W',
+                    LPAD(MOD(YEARWEEK(da.target_date, 3), 100), 2, '0')
+            ) AS period,
+            SUM(da.total_seconds) AS totalSeconds,
+            COUNT(*) AS dayCount,
+            FLOOR(SUM(da.total_seconds) / NULLIF(COUNT(*), 0)) AS avgSecPerDay
+        FROM daily_aggregate da
+        WHERE da.anon_id = #{anonId}
+          AND da.target_date BETWEEN #{fromDate} AND #{toDate}
+        GROUP BY YEARWEEK(da.target_date, 3)
+        ORDER BY MIN(da.target_date) ASC
+    </select>
+
+    <!-- 최근 N개월 범위를 [fromDate, toDate]로 넘겨 집계 -->
+    <select id="selectMonthlyAgg" parameterType="map" resultType="FocusAggDto">
+        SELECT
+            DATE_FORMAT(da.target_date, '%Y-%m') AS period,
+            SUM(da.total_seconds) AS totalSeconds,
+            COUNT(*) AS dayCount,
+            FLOOR(SUM(da.total_seconds) / NULLIF(COUNT(*), 0)) AS avgSecPerDay
+        FROM daily_aggregate da
+        WHERE da.anon_id = #{anonId}
+          AND da.target_date BETWEEN #{fromDate} AND #{toDate}
+        GROUP BY DATE_FORMAT(da.target_date, '%Y-%m')
+        ORDER BY MIN(da.target_date) ASC
+    </select>
+
 </mapper>

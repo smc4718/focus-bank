@@ -6,11 +6,14 @@
     <title>Focus Bank - 디지털 집중력 은행</title>
     <style>
         :root { --bg:#0f172a; --card:#111827; --muted:#9ca3af; --txt:#e5e7eb; --accent:#22c55e; --danger:#ef4444; --brand:#38bdf8; }
-        *{box-sizing:border-box} body{margin:0;font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,'Noto Sans KR',Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#0b1220,#10192b)}
+        *{box-sizing:border-box}
+        body{margin:0;font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,'Noto Sans KR',Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#0b1220,#10192b)}
         .wrap{max-width:960px;margin:0 auto;padding:28px}
         .app-title{display:flex;align-items:center;gap:12px;color:#fff}
         .logo{font-size:28px}
         .subtitle{color:var(--muted);margin-top:4px}
+
+        /* 공통 카드/그리드 스타일 */
         .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
         .card{background:rgba(17,24,39,.8);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;color:var(--txt);box-shadow:0 10px 30px rgba(0,0,0,.25)}
         .section-title{margin:0 0 10px 0;color:#fff;font-weight:700;font-size:18px}
@@ -31,6 +34,15 @@
         .timer{font-variant-numeric:tabular-nums}
         .footer{margin-top:18px;color:#6b7280;font-size:12px}
         @media (max-width:800px){.grid{grid-template-columns:1fr}}
+
+        /* === (추가) 상단 SPA 네비게이션 탭 === */
+        .tabs{display:flex;gap:8px;margin-top:14px}
+        .tab{border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+        .tab.active{background:#fff;color:#0b1220}
+
+        /* === (추가) 목표 진행률 바 === */
+        .progress{height:12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden}
+        .progress .bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#38bdf8)}
     </style>
 </head>
 <body>
@@ -43,38 +55,104 @@
         </div>
     </div>
 
-    <!-- 사용자/세션 상태 -->
-    <div class="grid">
-        <div class="card">
-            <h2 class="section-title">내 정보</h2>
-            <div class="row">
-                <div>식별자</div>
-                <div id="anonDisplay" class="pill mono">anon-????</div>
-            </div>
-            <div class="row">
-                <div>현재 상태</div>
-                <div id="statusPill" class="pill">대기 중</div>
-            </div>
-            <div class="row">
-                <div>진행 타이머</div>
-                <div id="liveTimer" class="mono timer">00:00:00</div>
-            </div>
-            <div class="btns">
-                <button id="btnDeposit" class="btn-deposit">입금하기</button>
-                <button id="btnSettle" class="btn-settle" disabled>정산하기</button>
-
-            </div>
-            <div class="hero">
-                💡 <span>입금은 집중 시작, 정산은 종료를 의미해요.</span>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2 class="section-title">일일 입금된 집중</h2>
-            <div class="balance" id="todayTotal">--:--:--</div>
-            <div class="muted">오늘 누적 집중 시간</div>
-        </div>
+    <!-- === (추가) SPA 네비게이션: 해시 라우팅으로 화면 전환 === -->
+    <div class="tabs">
+        <div id="tab-dashboard" class="tab">대시보드</div>
+        <div id="tab-reports" class="tab">리포트</div>
     </div>
+
+    <!-- ========== [뷰1] 대시보드 (기존) ========== -->
+    <section id="view-dashboard">
+        <!-- 상단: 사용자/세션 상태 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">내 정보</h2>
+                <div class="row">
+                    <div>식별자</div>
+                    <div id="anonDisplay" class="pill mono">anon-????</div>
+                </div>
+                <div class="row">
+                    <div>현재 상태</div>
+                    <div id="statusPill" class="pill">대기 중</div>
+                </div>
+                <div class="row">
+                    <div>진행 타이머</div>
+                    <div id="liveTimer" class="mono timer">00:00:00</div>
+                </div>
+                <div class="btns">
+                    <button id="btnDeposit" class="btn-deposit">입금하기</button>
+                    <button id="btnSettle" class="btn-settle" disabled>정산하기</button>
+                    <!-- (추가) 리포트로 이동 -->
+                    <button class="pill" id="btnGoReports">리포트 보기</button>
+                </div>
+                <div class="hero">
+                    💡 <span>입금은 집중 시작, 정산은 종료를 의미해요.</span>
+                </div>
+            </div>
+
+            <!-- 오늘 요약 -->
+            <div class="card">
+                <h2 class="section-title">일일 입금된 집중</h2>
+                <div class="balance" id="todayTotal">--:--:--</div>
+                <div class="muted">오늘 누적 집중 시간</div>
+            </div>
+        </div>
+
+        <!-- === (추가) Overview 미니 카드 3종: 이번 주 / 이번 달 / 목표 진행률 === -->
+        <div class="grid">
+            <!-- 이번 주 합계 -->
+            <div class="card">
+                <h2 class="section-title">이번 주 합계</h2>
+                <div class="balance" id="thisWeekTotal">--:--:--</div>
+                <div class="muted">월요일~오늘 기준(ISO 주)</div>
+            </div>
+            <!-- 이번 달 합계 -->
+            <div class="card">
+                <h2 class="section-title">이번 달 합계</h2>
+                <div class="balance" id="thisMonthTotal">--:--:--</div>
+                <div class="muted">1일~오늘 기준</div>
+            </div>
+            <!-- 목표 진행률 -->
+            <div class="card" style="grid-column: 1 / -1">
+                <h2 class="section-title">오늘 목표 진행률</h2>
+                <div class="row">
+                    <div class="muted">달성률</div>
+                    <div id="goalPct" class="pill">미설정</div>
+                </div>
+                <div class="progress"><div id="goalBar" class="bar"></div></div>
+                <div class="muted" id="goalDesc" style="margin-top:8px;">목표를 설정해 보세요.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== [뷰2] 리포트 ========== -->
+    <section id="view-reports" hidden>
+        <div class="grid">
+            <div class="card" style="grid-column:1 / -1">
+                <h2 class="section-title">주간/월간 집중 리포트</h2>
+                <div class="btns" style="margin-bottom:8px;">
+                    <button class="pill" id="btnWeekly" data-mode="weekly">주간</button>
+                    <button class="pill" id="btnMonthly" data-mode="monthly">월간</button>
+                </div>
+                <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px;">
+                    <canvas id="reportChart"></canvas>
+                    <div class="muted" id="rangeLabel" style="margin-top:6px;"></div>
+                </div>
+                <div class="grid" style="margin-top:16px;">
+                    <div class="card">
+                        <div>총 집중시간</div>
+                        <div class="balance" id="kpiTotal">--:--:--</div>
+                        <div class="muted">선택된 기간 합계</div>
+                    </div>
+                    <div class="card">
+                        <div>일당 평균</div>
+                        <div class="balance" id="kpiAvg">0초</div>
+                        <div class="muted">해당 기간 일평균(초)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <div class="footer">© Focus Bank · 단일 페이지 대시보드 (Thymeleaf + JS)</div>
 </div>
@@ -82,20 +160,20 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    // ====== 간단 ULID 생성 (클라이언트 최초 진입 시) ======
-    // 서버에서 생성/전달해도 됨. 이 코드는 라이브러리 없이 가벼운 버전.
+    /* =========================
+       공통: 익명 ID 발급/표시
+    ==========================*/
     (function ensureAnon() {
         let anonId = localStorage.getItem('anonId');
         if (!anonId) {
             anonId = generateULID();
             localStorage.setItem('anonId', anonId);
-            // ⚠️ 서버는 이 anonId가 anonymous_user 테이블에 존재해야 합니다.
-            // 초기엔 수동 시드, 이후엔 서버에서 '없으면 생성' 로직/엔드포인트 추가 권장.
+            // 서버에 anonymous_user 자동 생성 로직을 두면 베스트
         }
     })();
-
-    // ====== 상태/DOM ======
     const anonId = localStorage.getItem('anonId');
+
+    // 공통 엘리먼트
     const anonDisplay = document.getElementById('anonDisplay');
     const statusPill  = document.getElementById('statusPill');
     const liveTimerEl = document.getElementById('liveTimer');
@@ -104,9 +182,23 @@
     const toastEl     = document.getElementById('toast');
     const todayTotal  = document.getElementById('todayTotal');
 
-    let currentSessionId = null;
-    let tickTimer = null;
-    let startedAtMs = null;
+    // 대시보드 요약 카드 엘리먼트
+    const thisWeekTotal  = document.getElementById('thisWeekTotal');
+    const thisMonthTotal = document.getElementById('thisMonthTotal');
+    const goalPct        = document.getElementById('goalPct');
+    const goalBar        = document.getElementById('goalBar');
+    const goalDesc       = document.getElementById('goalDesc');
+
+    // 리포트 엘리먼트
+    const tabDashboard = document.getElementById('tab-dashboard');
+    const tabReports   = document.getElementById('tab-reports');
+    const btnGoReports = document.getElementById('btnGoReports');
+    const btnWeekly    = document.getElementById('btnWeekly');
+    const btnMonthly   = document.getElementById('btnMonthly');
+    const reportCanvas = document.getElementById('reportChart');
+    const kpiTotal     = document.getElementById('kpiTotal');
+    const kpiAvg       = document.getElementById('kpiAvg');
+    const rangeLabel   = document.getElementById('rangeLabel');
 
     // 표시용 마스킹
     anonDisplay.textContent = maskAnon(anonId);
@@ -114,181 +206,195 @@
     // 버튼 이벤트
     btnDeposit.addEventListener('click', onDeposit);
     btnSettle.addEventListener('click', onSettle);
+    btnGoReports.addEventListener('click', () => navigate('#/reports'));
 
-    // 일일 요약
+    // 초기 요약 로딩
     fetchTodaySummary();
+    fetchThisWeekTotal();
+    fetchThisMonthTotal();
+    fetchGoalProgressDaily();
 
-    // ====== 액션: 입금(집중 시작) ======
+    /* =========================
+       SPA 해시 라우터
+    ==========================*/
+    const routes = {
+        '#/dashboard': () => {
+            setActiveTab('dashboard');
+            showView('view-dashboard');
+        },
+        '#/reports': async () => {
+            setActiveTab('reports');
+            showView('view-reports');
+            if (!window.__chartLoaded) {
+                await loadChartJs();
+                window.__chartLoaded = true;
+            }
+            if (!window.__reportMode) window.__reportMode = 'weekly';
+            await renderReport(window.__reportMode);
+        }
+    };
+    function navigate(hash){ if (location.hash === hash) routes[hash]?.(); else location.hash = hash; }
+    function setActiveTab(name){
+        tabDashboard.classList.toggle('active', name === 'dashboard');
+        tabReports.classList.toggle('active', name === 'reports');
+    }
+    function showView(id){
+        document.getElementById('view-dashboard').hidden = id !== 'view-dashboard';
+        document.getElementById('view-reports').hidden   = id !== 'view-reports';
+    }
+    function router(){ const hash = location.hash || '#/dashboard'; (routes[hash] || routes['#/dashboard'])(); }
+    window.addEventListener('hashchange', router);
+    window.addEventListener('load', router);
+    tabDashboard.addEventListener('click', () => navigate('#/dashboard'));
+    tabReports  .addEventListener('click', () => navigate('#/reports'));
+
+    /* =========================
+       리포트 (Chart.js 지연 로딩)
+    ==========================*/
+    async function loadChartJs(){
+        await import('https://cdn.jsdelivr.net/npm/chart.js');
+    }
+    btnWeekly.addEventListener('click', () => { window.__reportMode = 'weekly'; renderReport('weekly'); });
+    btnMonthly.addEventListener('click', () => { window.__reportMode = 'monthly'; renderReport('monthly'); });
+    let reportChart;
+    async function renderReport(mode){
+        const url = mode === 'weekly'
+            ? `/api/reports/weekly?weeks=12`
+            : `/api/reports/monthly?months=12`;
+        const res = await fetch(url, { headers: { 'X-ANON-ID': anonId } });
+        const data = await res.json(); // [{period,totalSeconds,dayCount,avgSecPerDay}]
+        const labels = data.map(d => d.period);
+        const hours  = data.map(d => Math.round((d.totalSeconds || 0)/3600));
+        const totalSec = data.reduce((a,b)=> a + (b.totalSeconds || 0), 0);
+        const avgSec   = data.length ? Math.round(data.reduce((a,b)=> a + (b.avgSecPerDay || 0), 0) / data.length) : 0;
+        kpiTotal.textContent = secToHMS(totalSec);
+        kpiAvg.textContent   = `${avgSec}초`;
+        rangeLabel.textContent = mode === 'weekly' ? '최근 12주' : '최근 12개월';
+        if (reportChart) reportChart.destroy();
+        const ctx = reportCanvas.getContext('2d');
+        reportChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: mode === 'weekly' ? '주간 총 집중(시간)' : '월간 총 집중(시간)', data: hours }] },
+            options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } } }
+        });
+        reportCanvas.parentElement.style.height = '360px';
+    }
+
+    /* =========================
+       대시보드 액션: 입금/정산
+    ==========================*/
+    let currentSessionId = null, tickTimer = null, startedAtMs = null;
+
     async function onDeposit() {
         try {
             btnDeposit.disabled = true;
-            const res = await fetch('/api/sessions/deposit', {
-                method: 'POST',
-                headers: { 'X-ANON-ID': anonId }
-            });
-
-            if (res.status === 409) {
-                // 백엔드에서 Conflict 응답 (이미 열린 세션)
-                showToast('이미 진행 중인 세션이 있습니다.', true);
-                btnDeposit.disabled = false;
-                return;
-            }
-
-            if (!res.ok) {
-                throw new Error(await res.text());
-            }
-
-            const data = await res.json(); // FocusSessionDto
+            const res = await fetch('/api/sessions/deposit', { method: 'POST', headers: { 'X-ANON-ID': anonId } });
+            if (res.status === 409){ showToast('이미 진행 중인 세션이 있습니다.', true); btnDeposit.disabled = false; return; }
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json(); // {sessionId, startedAt, ...}
             currentSessionId = data.sessionId;
             startedAtMs = Date.parse(data.startedAt ?? data.createdAt);
-            setStatusRunning();
-            startTick();
-            showToast('입금이 시작되었습니다! ✨');
-        } catch (e) {
-            showToast('입금 실패: ' + (e.message || e), true);
-            btnDeposit.disabled = false;
-        }
+            setStatusRunning(); startTick(); showToast('입금이 시작되었습니다! ✨');
+        } catch (e) { showToast('입금 실패: ' + (e.message || e), true); btnDeposit.disabled = false; }
     }
-
-    // ====== 액션: 정산(집중 종료) ======
     async function onSettle() {
-        if (!currentSessionId) {
-            showToast('진행 중인 입금(집중)이 없습니다.', true);
-            return;
-        }
+        if (!currentSessionId){ showToast('진행 중인 입금(집중)이 없습니다.', true); return; }
         try {
             btnSettle.disabled = true;
             const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
-
-            if (res.status === 409) {
-                // 백엔드에서 Conflict 응답 (이미 종료된 세션)
-                showToast('이미 종료된 세션입니다.', true);
-                btnSettle.disabled = false;
-                return;
-            }
-
-            if (!res.ok) {
-                throw new Error(await res.text());
-            }
-
-            const data = await res.json();
-            stopTick();
-            setStatusIdle();
-            // 집중 완료 후 오늘 요약 자동 갱신
+            if (res.status === 409){ showToast('이미 종료된 세션입니다.', true); btnSettle.disabled = false; return; }
+            if (!res.ok) throw new Error(await res.text());
+            const data = await res.json(); // {durationSec,...}
+            stopTick(); setStatusIdle();
+            // 정산 후 요약들 갱신
             await fetchTodaySummary();
+            await fetchThisWeekTotal();
+            await fetchThisMonthTotal();
+            await fetchGoalProgressDaily();
             showToast(`정산 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
-        } catch (e) {
-            showToast('정산 실패: ' + (e.message || e), true);
-            btnSettle.disabled = false;
-        }
+        } catch (e) { showToast('정산 실패: ' + (e.message || e), true); btnSettle.disabled = false; }
+    }
+    function setStatusRunning(){ statusPill.textContent='입금 중'; statusPill.style.background='rgba(34,197,94,.15)'; statusPill.style.borderColor='rgba(34,197,94,.35)'; btnSettle.disabled=false; btnDeposit.disabled=true; }
+    function setStatusIdle(){ statusPill.textContent='대기 중'; statusPill.style.background='rgba(255,255,255,.06)'; statusPill.style.borderColor='rgba(255,255,255,.12)'; btnSettle.disabled=true; btnDeposit.disabled=false; liveTimerEl.textContent='00:00:00'; currentSessionId=null; startedAtMs=null; }
+    function startTick(){ if (!startedAtMs) startedAtMs=Date.now(); liveTimerEl.textContent=fmtSec(Math.floor((Date.now()-startedAtMs)/1000)); tickTimer=setInterval(()=>{ const sec=Math.floor((Date.now()-startedAtMs)/1000); liveTimerEl.textContent=fmtSec(sec); },1000); }
+    function stopTick(){ if (tickTimer) clearInterval(tickTimer); }
+
+    /* =========================
+       대시보드 요약: API 호출
+    ==========================*/
+    // 오늘 요약
+    async function fetchTodaySummary(){
+        const d = new Date();
+        const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        try{
+            const res = await fetch(`/api/reports/summary?date=${dateStr}`, { headers: {'X-ANON-ID': anonId} });
+            if(res.ok){
+                const json = await res.json(); // { targetDate, totalSec } 또는 { totalSeconds }
+                todayTotal.textContent = fmtSec((json.totalSec ?? json.totalSeconds) || 0);
+            } else { todayTotal.textContent = '--:--:--'; }
+        }catch(_){ todayTotal.textContent = '--:--:--'; }
+    }
+    // 이번 주 합계
+    async function fetchThisWeekTotal(){
+        try{
+            const res = await fetch(`/api/reports/weekly?weeks=1`, { headers: {'X-ANON-ID': anonId} });
+            const arr = res.ok ? await res.json() : [];
+            const sec = Array.isArray(arr) && arr.length ? (arr[0].totalSeconds || 0) : 0;
+            thisWeekTotal.textContent = fmtSec(sec);
+        }catch(_){ thisWeekTotal.textContent='--:--:--'; }
+    }
+    // 이번 달 합계
+    async function fetchThisMonthTotal(){
+        try{
+            const res = await fetch(`/api/reports/monthly?months=1`, { headers: {'X-ANON-ID': anonId} });
+            const arr = res.ok ? await res.json() : [];
+            const sec = Array.isArray(arr) && arr.length ? (arr[0].totalSeconds || 0) : 0;
+            thisMonthTotal.textContent = fmtSec(sec);
+        }catch(_){ thisMonthTotal.textContent='--:--:--'; }
+    }
+    // 오늘 목표 진행률 (미구현이면 "미설정")
+    async function fetchGoalProgressDaily(){
+        try{
+            const res = await fetch(`/api/goals/progress?period=daily`, { headers: {'X-ANON-ID': anonId} });
+            if(!res.ok){ setGoalUnset(); return; }
+            const json = await res.json(); // { targetSeconds, achievedSeconds, progress(0~1) }
+            if (!json || json.targetSeconds == null){ setGoalUnset(); return; }
+            const pct = Math.min(100, Math.round((json.progress ?? (json.achievedSeconds/json.targetSeconds))*100));
+            goalPct.textContent = `${pct}%`;
+            goalBar.style.width = `${pct}%`;
+            goalDesc.textContent = `오늘 ${fmtSec(json.achievedSeconds||0)} / 목표 ${fmtSec(json.targetSeconds||0)}`;
+        }catch(_){ setGoalUnset(); }
+    }
+    function setGoalUnset(){
+        goalPct.textContent = '미설정';
+        goalBar.style.width = '0%';
+        goalDesc.textContent = '목표를 설정해 보세요.';
     }
 
-    // ====== 상태 전환 / 타이머 ======
-    function setStatusRunning() {
-        statusPill.textContent = '입금 중';
-        statusPill.style.background = 'rgba(34,197,94,.15)';
-        statusPill.style.borderColor = 'rgba(34,197,94,.35)';
-        btnSettle.disabled = false;
-        btnDeposit.disabled = true;
-    }
-
-    function setStatusIdle() {
-        statusPill.textContent = '대기 중';
-        statusPill.style.background = 'rgba(255,255,255,.06)';
-        statusPill.style.borderColor = 'rgba(255,255,255,.12)';
-        btnSettle.disabled = true;
-        btnDeposit.disabled = false;
-        liveTimerEl.textContent = '00:00:00';
-        currentSessionId = null;
-        startedAtMs = null;
-    }
-
-    function startTick() {
-        if (!startedAtMs) startedAtMs = Date.now();
-        liveTimerEl.textContent = fmtSec(Math.floor((Date.now() - startedAtMs)/1000));
-        tickTimer = setInterval(() => {
-            const sec = Math.floor((Date.now() - startedAtMs)/1000);
-            liveTimerEl.textContent = fmtSec(sec);
-        }, 1000);
-    }
-    function stopTick() { if (tickTimer) clearInterval(tickTimer); }
-
-    // ====== 유틸 ======
+    /* =========================
+       공통 유틸
+    ==========================*/
     function showToast(msg, error=false){
         toastEl.textContent = msg;
         toastEl.style.borderColor = error ? 'rgba(239,68,68,.5)' : 'rgba(56,189,248,.5)';
         toastEl.classList.add('show');
         setTimeout(()=>toastEl.classList.remove('show'), 2200);
     }
+    function maskAnon(id){ if(!id) return 'anon-****'; const tail=id.slice(-4).toUpperCase(); return 'anon-'+tail; }
+    function fmtSec(s){ const h=String(Math.floor(s/3600)).padStart(2,'0'); const m=String(Math.floor((s%3600)/60)).padStart(2,'0'); const sec=String(Math.floor(s%60)).padStart(2,'0'); return `${h}:${m}:${sec}`; }
+    function secToHMS(sec){ const h=Math.floor(sec/3600); const m=Math.floor((sec%3600)/60); return `${h}시간 ${m}분`; }
 
-    function maskAnon(id){
-        if(!id) return 'anon-****';
-        const tail = id.slice(-4).toUpperCase();
-        return 'anon-' + tail;
-        // (고려사항 : 닉네임이 있다면 서버 응답에서 displayName 내려 활용해도 좋음)
-    }
-
-    function fmtSec(s){
-        const h = Math.floor(s/3600).toString().padStart(2,'0');
-        const m = Math.floor((s%3600)/60).toString().padStart(2,'0');
-        const sec = Math.floor(s%60).toString().padStart(2,'0');
-        return `${h}:${m}:${sec}`;
-    }
-
-    // 간단한 ULID 생성기 (Crockford Base32)
+    // 간단 ULID 생성기 (Crockford Base32)
     function generateULID(){
         const ENCODING = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        function encodeTime(t){
-            let out = "";
-            for(let i=9;i>=0;i--){ out = ENCODING[(t >>> (i*5)) & 31] + out; }
-            return out;
-        }
-        function rand(n){
-            const bytes = new Uint8Array(n);
-            (crypto.getRandomValues || window.msCrypto.getRandomValues).call(crypto, bytes);
-            return Array.from(bytes);
-        }
-        const time = Date.now();
-        // time(48비트) → 10 chars, random(80비트) → 16 chars
-        // JS 비트 연산 한계로 쉬운 방식으로 인코딩
-        let t = time;
-        const timeChars = [];
-        for(let i=0;i<10;i++){
-            timeChars.push(ENCODING[t % 32]); t = Math.floor(t/32);
-        }
-        const randomBytes = rand(16);
-        const randChars = [];
-        let carry = 0, bits = 0, val = 0;
-        for (let i=0;i<randomBytes.length;i++){
-            val = (val << 8) | randomBytes[i];
-            bits += 8;
-            while(bits >= 5){
-                bits -= 5;
-                randChars.push(ENCODING[(val >>> bits) & 31]);
-            }
-        }
-        while(randChars.length < 16) randChars.push('0');
+        function rand(n){ const bytes=new Uint8Array(n); (crypto.getRandomValues||window.msCrypto.getRandomValues).call(crypto,bytes); return Array.from(bytes); }
+        const time = Date.now(); let t=time; const timeChars=[];
+        for(let i=0;i<10;i++){ timeChars.push(ENCODING[t%32]); t=Math.floor(t/32); }
+        const randomBytes = rand(16); const randChars=[]; let bits=0,val=0;
+        for (let i=0;i<randomBytes.length;i++){ val=(val<<8)|randomBytes[i]; bits+=8; while(bits>=5){ bits-=5; randChars.push(ENCODING[(val>>>bits)&31]); } }
+        while(randChars.length<16) randChars.push('0');
         return timeChars.reverse().join('') + randChars.slice(0,16).join('');
-    }
-
-    // 일일 집중 요약 API 호출
-    async function fetchTodaySummary(){
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth()+1).padStart(2,'0');
-        const dd = String(d.getDate()).padStart(2,'0');
-        const dateStr = `${yyyy}-${mm}-${dd}`;
-        try{
-            const res = await fetch(`/api/reports/summary?date=${dateStr}`, { headers: {'X-ANON-ID': anonId} });
-            if(res.ok){
-                const json = await res.json(); // { targetDate, totalSec }
-                todayTotal.textContent = fmtSec(json.totalSec ?? 0);
-            }else{
-                todayTotal.textContent = '--:--:--';
-            }
-        }catch(_){
-            todayTotal.textContent = '--:--:--';
-        }
     }
 </script>
 </body>
