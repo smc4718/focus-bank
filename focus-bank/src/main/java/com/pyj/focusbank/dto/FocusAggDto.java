@@ -1,8 +1,7 @@
 package com.pyj.focusbank.dto;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

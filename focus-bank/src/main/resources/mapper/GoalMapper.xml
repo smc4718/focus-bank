@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pyj.focusbank.dao.GoalMapper">
+
+    <!-- user_goal -> UserGoalDto 매핑 -->
+    <resultMap id="UserGoalMap" type="UserGoalDto">
+        <id     property="goalId"        column="goal_id"/>
+        <result property="anonId"        column="anon_id"/>
+        <result property="periodType"    column="period_type"/>
+        <result property="targetSeconds" column="target_seconds"/>
+        <result property="effectiveFrom" column="effective_from"/>
+        <result property="createdAt"     column="created_at"/>
+    </resultMap>
+
+    <!-- 오늘 기준 활성 목표 1건 (없으면 null) -->
+    <select id="selectActiveGoal" resultMap="UserGoalMap">
+        SELECT goal_id, anon_id, period_type, target_seconds, effective_from, created_at
+          FROM user_goal
+         WHERE anon_id = #{anonId}
+           AND period_type = #{periodType}
+           AND effective_from <![CDATA[ <= ]]> #{today}
+         ORDER BY effective_from DESC
+               LIMIT 1
+    </select>
+
+    <!-- 일별 집계(daily_aggregate) 합계(초) -->
+    <select id="sumTotalSecondsBetween" resultType="int">
+        SELECT COALESCE(SUM(total_seconds), 0)
+          FROM daily_aggregate
+         WHERE anon_id = #{anonId}
+           AND target_date BETWEEN #{fromDate} AND #{toDate}
+    </select>
+
+    <!-- 목표 저장 (업서트) -->
+    <insert id="upsertGoal" parameterType="com.pyj.focusbank.dto.UserGoalDto">
+        INSERT INTO user_goal (anon_id, period_type, target_seconds, effective_from)
+        VALUES (#{anonId}, #{periodType}, #{targetSeconds}, #{effectiveFrom})
+            ON DUPLICATE KEY UPDATE
+                                 target_seconds = VALUES(target_seconds)
+    </insert>
+
+</mapper>
