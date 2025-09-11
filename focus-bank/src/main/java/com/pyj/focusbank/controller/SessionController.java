@@ -4,6 +4,7 @@ import com.pyj.focusbank.dto.FocusSessionDto;
 import com.pyj.focusbank.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -11,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,6 +22,20 @@ import java.util.Map;
 public class SessionController {
 
     private final SessionService sessionService;
+
+    /**
+     * 특정 날짜의 세션 목록 조회
+     * @param anonId 익명 사용자 ID (헤더)
+     * @param date 조회할 날짜 (yyyy-MM-dd)
+     * @return 해당 날짜에 기록된 세션 목록
+     */
+    @GetMapping
+    public List<FocusSessionDto> listSessions(
+            @RequestHeader("X-ANON-ID") String anonId,
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return sessionService.getSessionsForDate(anonId, date);
+    }
 
     /**
      * 집중 시작(입금)

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -13,6 +15,17 @@ import java.util.Objects;
 public class SessionServiceImpl implements SessionService {
 
     private final SessionMapper sessionMapper;
+
+    /**
+     * 특정 날짜의 세션 목록 조회 구현
+     * @param anonId 익명 사용자 ID
+     * @param date 조회할 날짜 (yyyy-MM-dd)
+     * @return 세션 목록
+     */
+    @Override
+    public List<FocusSessionDto> getSessionsForDate(String anonId, LocalDate date) {
+        return sessionMapper.findByAnonAndDate(anonId.trim(), date);
+    }
 
     /**
      * 집중 시작 (입금)

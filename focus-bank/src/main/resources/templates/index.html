@@ -133,8 +133,8 @@
             <!-- [남김] 세션별 막대 (오늘) -->
             <div class="card" style="grid-column: 1 / -1">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <h2 class="section-title" style="margin:0;">세션별 막대 (오늘)</h2>
-                    <div class="muted" id="sessionBarHint">각 세션 길이(분)</div>
+                    <h2 class="section-title" style="margin:0;">각 회차 집중 (오늘)</h2>
+                    <div class="muted" id="sessionBarHint">집중 시간(분)</div>
                 </div>
                 <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px; position:relative;">
                     <canvas id="sessionBarCanvas"></canvas>
@@ -616,29 +616,34 @@
             if (res.ok) serverArr = await res.json();
         } catch(_) {}
 
-        // ✅ 병합 시 endedAt은 서버 값이 있으면 우선, 없으면 로컬값 유지
-        const map = new Map();
-        [...localArr, ...serverArr].forEach(s => {
-            if (!s || !s.sessionId) return;
-            const prev = map.get(s.sessionId) || {};
+        const byId = new Map();
+        const upsert = (s)=>{
+            if (!s || !s.sessionId || !s.startedAt) return;
+            const prev = byId.get(s.sessionId);
+            if (!prev) { byId.set(s.sessionId, s); return; }
 
-            // 종료된 세션이면 절대 null로 덮어쓰지 않음
-            let endedAt = prev.endedAt || null;
-            if (s.endedAt) {
-                endedAt = s.endedAt;
-            }
+            // 시작은 더 이른 값
+            const startedAt =
+                new Date(prev.startedAt) <= new Date(s.startedAt) ? prev.startedAt : s.startedAt;
 
-            map.set(s.sessionId, {
-                ...prev,
-                ...s,
-                endedAt
-            });
-        });
+            // 종료는 "있는 값 우선", 둘 다 있으면 더 늦은 값
+            const pEnd = prev.endedAt ? new Date(prev.endedAt) : null;
+            const sEnd = s.endedAt ? new Date(s.endedAt) : null;
+            let endedAt = null;
+            if (pEnd && !sEnd) endedAt = prev.endedAt;
+            else if (!pEnd && sEnd) endedAt = s.endedAt;
+            else if (pEnd && sEnd) endedAt = (pEnd >= sEnd) ? prev.endedAt : s.endedAt;
 
-        // 진행 중 세션 보정
+            byId.set(s.sessionId, { ...prev, ...s, startedAt, endedAt });
+        };
+
+        localArr.forEach(upsert);
+        serverArr.forEach(upsert);
+
+        // 진행 중 세션 오버레이 (현재 회차만 open)
         if (currentSessionId && startedAtMs){
-            const prev = map.get(currentSessionId) || {};
-            map.set(currentSessionId, {
+            const prev = byId.get(currentSessionId) || {};
+            byId.set(currentSessionId, {
                 ...prev,
                 sessionId: currentSessionId,
                 startedAt: new Date(startedAtMs).toISOString(),
@@ -646,7 +651,7 @@
             });
         }
 
-        return Array.from(map.values()).filter(s=>s.startedAt);
+        return [...byId.values()].filter(s=>s.startedAt);
     }
 
     let sessionBarChart;
@@ -654,23 +659,43 @@
         if (!sessionBarCanvas) return;
         const sessions = await fetchTodaySessions();
 
-        const labels = sessions
-            .sort((a,b)=> new Date(a.startedAt) - new Date(b.startedAt))
-            .map((s,i)=> {
-                const d = new Date(s.startedAt);
-                const hh = String(d.getHours()).padStart(2,'0');
-                const mm = String(d.getMinutes()).padStart(2,'0');
-                return `${i+1}회 · ${hh}:${mm}`;
-            });
+        const sorted = sessions
+            .filter(s => s.startedAt)
+            .sort((a,b)=> new Date(a.startedAt) - new Date(b.startedAt));
 
-        const dataMin = sessions.map(s=>{
-            if (!s.startedAt) return 0;
-            const endIso = s.endedAt ? s.endedAt : new Date().toISOString();
-            return Math.max(0, Math.round((new Date(endIso) - new Date(s.startedAt))/60000));
+        if (!sorted.length){
+            sessionBarEmpty.style.display = 'block';
+            return;
+        }
+        sessionBarEmpty.style.display = 'none';
+
+        const labels = sorted.map((s,i)=>{
+            const d = new Date(s.startedAt);
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mm = String(d.getMinutes()).padStart(2,'0');
+            return `${i+1}회 · ${hh}:${mm}`;
+        });
+
+        // 🔑 핵심: endedAt이 없고 다음 세션 시작이 있으면 그 시각으로 종료를 고정(클램핑)
+        const dataMin = sorted.map((s,i)=>{
+            const start = new Date(s.startedAt);
+            const endedAt = s.endedAt ? new Date(s.endedAt) : null;
+            const nextStart = (i < sorted.length - 1) ? new Date(sorted[i+1].startedAt) : null;
+
+            let end;
+            if (s.sessionId === currentSessionId) {
+                // 현재 진행 중인 회차만 now 기준으로 자라게
+                end = new Date();
+            } else {
+                // 이전 회차: 종료값이 있으면 그걸, 없으면 다음 회차 시작으로 고정
+                end = endedAt || nextStart || start; // next가 없고 endedAt도 없으면 0분 처리
+            }
+
+            const minutes = Math.max(0, Math.round((end - start)/60000));
+            return minutes;
         });
 
         if (!window.__chartLoaded){ await loadChartJs(); window.__chartLoaded = true; }
-
         if (sessionBarChart) sessionBarChart.destroy();
         const ctx = sessionBarCanvas.getContext('2d');
         sessionBarChart = new Chart(ctx, {
@@ -683,7 +708,6 @@
             }
         });
         sessionBarCanvas.parentElement.style.height = '280px';
-        sessionBarEmpty.style.display = dataMin.length ? 'none' : 'block';
     }
 
     // 진행 중일 때 1분마다 막대 갱신
