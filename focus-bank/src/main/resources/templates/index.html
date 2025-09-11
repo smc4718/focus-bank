@@ -267,7 +267,7 @@
     const goalFrom    = document.getElementById('goalFrom');
     const goalViewPeriod = document.getElementById('goalViewPeriod');
 
-    // [남김] 세션별 막대 DOM
+    // 세션별 막대 DOM
     const sessionBarCanvas = document.getElementById('sessionBarCanvas');
     const sessionBarEmpty  = document.getElementById('sessionBarEmpty');
 
@@ -409,7 +409,6 @@
             startedAtMs = Date.parse(data.startedAt ?? data.createdAt);
             setStatusRunning(); startTick(); showToast('입금이 시작되었습니다! ✨');
 
-            // 로컬 로그 & 막대 즉시 갱신
             logStart(currentSessionId, startedAtMs);
             await renderSessionBars();
         } catch (e) { showToast('입금 실패: ' + (e.message || e), true); btnDeposit.disabled = false; }
@@ -421,7 +420,7 @@
             const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
             if (res.status === 409){ showToast('이미 종료된 세션입니다.', true); btnSettle.disabled = false; return; }
             if (!res.ok) throw new Error(await res.text());
-            const data = await res.json(); // {durationSec,...}
+            const data = await res.json();
             stopTick(); setStatusIdle();
             await fetchTodaySummary();
             await fetchThisWeekTotal();
@@ -429,7 +428,6 @@
             await fetchGoalProgress(goalViewPeriod.value || 'daily');
             showToast(`정산 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
 
-            // 로컬 로그 종료 & 막대 갱신
             logEnd(currentSessionId, Date.now());
             await renderSessionBars();
         } catch (e) { showToast('정산 실패: ' + (e.message || e), true); btnSettle.disabled = false; }
@@ -456,7 +454,7 @@
             const sec=Math.floor((Date.now()-startedAtMs)/1000);
             liveTimerEl.textContent=fmtSec(sec);
         },1000);
-        startLiveUiTick(); // 진행 중일 때 막대 1분 갱신
+        startLiveUiTick();
         persistActiveSession();
     }
     function stopTick(){
@@ -465,7 +463,7 @@
         persistActiveSession();
     }
 
-    /* ========= 오늘 요약 호출 ========= */
+    /* ========= 오늘 요약 ========= */
     async function fetchTodaySummary(){
         const d = new Date();
         const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
@@ -532,14 +530,6 @@
         if (e.key === 'Escape') { e.preventDefault(); closeGoalModal(); }
         if (e.key === 'Enter')  { e.preventDefault(); btnSaveGoal.click(); }
     });
-    goalModal.addEventListener('keydown', (e)=>{
-        if (e.key !== 'Tab') return;
-        const focusables = goalModal.querySelectorAll('button,select,input');
-        if (!focusables.length) return;
-        const first = focusables[0], last = focusables[focusables.length-1];
-        if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-    });
     btnSaveGoal.addEventListener('click', async () => {
         try{
             const hours = parseInt(goalHours.value || '0', 10);
@@ -592,7 +582,12 @@
         const map = loadSessionLog();
         Object.keys(map).forEach(k=>{
             const s = map[k]?.find(x => x.sessionId === sessionId);
-            if (s) s.endedAt = new Date(endedAtMs).toISOString();
+            if (s) {
+                // endedAt이 없을 때만 새로 기록 (한번 기록된 건 덮어쓰지 않음)
+                if (!s.endedAt) {
+                    s.endedAt = new Date(endedAtMs).toISOString();
+                }
+            }
         });
         saveSessionLog(map);
     }
@@ -620,16 +615,37 @@
             const res = await fetch(`/api/sessions?date=${date}`, { headers: { 'X-ANON-ID': anonId } });
             if (res.ok) serverArr = await res.json();
         } catch(_) {}
+
+        // ✅ 병합 시 endedAt은 서버 값이 있으면 우선, 없으면 로컬값 유지
         const map = new Map();
         [...localArr, ...serverArr].forEach(s => {
             if (!s || !s.sessionId) return;
             const prev = map.get(s.sessionId) || {};
-            map.set(s.sessionId, { ...prev, ...s });
+
+            // 종료된 세션이면 절대 null로 덮어쓰지 않음
+            let endedAt = prev.endedAt || null;
+            if (s.endedAt) {
+                endedAt = s.endedAt;
+            }
+
+            map.set(s.sessionId, {
+                ...prev,
+                ...s,
+                endedAt
+            });
         });
+
+        // 진행 중 세션 보정
         if (currentSessionId && startedAtMs){
             const prev = map.get(currentSessionId) || {};
-            map.set(currentSessionId, { ...prev, sessionId: currentSessionId, startedAt: new Date(startedAtMs).toISOString(), endedAt: null });
+            map.set(currentSessionId, {
+                ...prev,
+                sessionId: currentSessionId,
+                startedAt: new Date(startedAtMs).toISOString(),
+                endedAt: null
+            });
         }
+
         return Array.from(map.values()).filter(s=>s.startedAt);
     }
 
@@ -646,7 +662,9 @@
                 const mm = String(d.getMinutes()).padStart(2,'0');
                 return `${i+1}회 · ${hh}:${mm}`;
             });
+
         const dataMin = sessions.map(s=>{
+            if (!s.startedAt) return 0;
             const endIso = s.endedAt ? s.endedAt : new Date().toISOString();
             return Math.max(0, Math.round((new Date(endIso) - new Date(s.startedAt))/60000));
         });
@@ -691,7 +709,7 @@
     function fmtSec(s){ const h=String(Math.floor(s/3600)).padStart(2,'0'); const m=String(Math.floor((s%3600)/60)).padStart(2,'0'); const sec=String(Math.floor(s%60)).padStart(2,'0'); return `${h}:${m}:${sec}`; }
     function secToHMS(sec){ const h=Math.floor(sec/3600); const m=Math.floor((sec%3600)/60); return `${h}시간 ${m}분`; }
 
-    // 간단 ULID (오타 수정 버전)
+    // 간단 ULID
     function generateULID(){
         const ENCODING = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
         function rand(n){
