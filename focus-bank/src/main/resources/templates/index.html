@@ -2,49 +2,61 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/> <!-- 반응형 -->
     <title>Focus Bank - 디지털 집중력 은행</title>
     <style>
+        /* ==== 전역 색상, 테마 변수 ==== */
         :root { --bg:#0f172a; --card:#111827; --muted:#9ca3af; --txt:#e5e7eb; --accent:#22c55e; --danger:#ef4444; --brand:#38bdf8; }
-        *{box-sizing:border-box}
-        body{margin:0;font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,'Noto Sans KR',Segoe UI,Roboto,Arial;background:linear-gradient(120deg,#0b1220,#10192b)}
-        .wrap{max-width:960px;margin:0 auto;padding:28px}
-        .app-title{display:flex;align-items:center;gap:12px;color:#fff}
+        *{box-sizing:border-box} /* 모든 요소에 box-sizing 통일 */
+        body{
+            margin:0;
+            font-family:ui-sans-serif,system-ui,AppleSDGothicNeo,'Noto Sans KR',Segoe UI,Roboto,Arial;
+            background:linear-gradient(120deg,#0b1220,#10192b) /* 어두운 배경 */
+        }
+        .wrap{max-width:960px;margin:0 auto;padding:28px} /* 가운데 정렬된 메인 컨테이너 */
+        .app-title{display:flex;align-items:center;gap:12px;color:#fff} /* 상단 로고와 제목 영역 */
         .logo{font-size:28px}
         .subtitle{color:var(--muted);margin-top:4px}
 
-        /* 카드/그리드 */
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
-        .card{background:rgba(17,24,39,.8);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;color:var(--txt);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+        /* ==== 카드 / 그리드 ==== */
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px} /* 2열 그리드 */
+        .card{
+            background:rgba(17,24,39,.8);
+            border:1px solid rgba(255,255,255,.06);
+            border-radius:18px;
+            padding:18px;
+            color:var(--txt);
+            box-shadow:0 10px 30px rgba(0,0,0,.25)
+        }
         .section-title{margin:0 0 10px 0;color:#fff;font-weight:700;font-size:18px}
         .row{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
         .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);color:#fff}
-        .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+        .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace} /* 고정폭 글꼴 */
         .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
         button{cursor:pointer;border:none;border-radius:12px;padding:12px 16px;font-weight:700;color:#0b1020;transition:.2s}
-        .btn-deposit{background:var(--accent)}
-        .btn-settle{background:var(--danger)}
-        .btn-deposit:disabled,.btn-settle:disabled{opacity:.5;cursor:not-allowed}
-        .balance{font-size:28px;font-weight:800;color:#fff}
+        .btn-deposit{background:var(--accent)} /* 입금 버튼 색상 (초록) */
+        .btn-settle{background:var(--danger)} /* 정산 버튼 색상 (빨강) */
+        .btn-deposit:disabled,.btn-settle:disabled{opacity:.5;cursor:not-allowed} /* 비활성화 시 흐리게 */
+        .balance{font-size:28px;font-weight:800;color:#fff} /* 합계 표시 큰 글씨 */
         .muted{color:var(--muted);font-size:13px}
         .toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.12);padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.2s}
-        .toast.show{opacity:1;transform:none}
-        .hero{margin-top:18px;display:flex;gap:10px;align-items:center;color:#cbd5e1}
+        .toast.show{opacity:1;transform:none} /* 토스트 메시지 표시 */
+        .hero{margin-top:18px;display:flex;gap:10px;align-items:center;color:#cbd5e1} /* 안내문구 */
         .hero b{color:#fff}
-        .timer{font-variant-numeric:tabular-nums}
+        .timer{font-variant-numeric:tabular-nums} /* 숫자 간격 일정하게 */
         .footer{margin-top:18px;color:#6b7280;font-size:12px}
-        @media (max-width:800px){.grid{grid-template-columns:1fr}}
+        @media (max-width:800px){.grid{grid-template-columns:1fr}} /* 모바일에서는 1열 */
 
-        /* 탭 */
+        /* ==== 탭 버튼 ==== */
         .tabs{display:flex;gap:8px;margin-top:14px}
         .tab{border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
         .tab.active{background:#fff;color:#0b1220}
 
-        /* 목표 진행률 */
+        /* ==== 목표 진행률 바 ==== */
         .progress{height:12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden}
         .progress .bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#38bdf8)}
 
-        /* 모달 */
+        /* ==== 모달 ==== */
         .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px}
         .modal{background:rgba(17,24,39,.98);border:1px solid rgba(255,255,255,.08);border-radius:16px;max-width:420px;width:100%;padding:18px;color:#fff}
         .modal h3{margin:0 0 12px 0}
@@ -53,16 +65,16 @@
         .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
         .btn-ghost{background:rgba(255,255,255,.12);color:#fff}
         .btn-brand{background:var(--brand);color:#0b1020}
-        .show-flex{display:flex}
+        .show-flex{display:flex} /* 모달 표시 시 flex로 표시 */
 
-        /* 스켈레톤 */
+        /* ==== 로딩 스켈레톤 애니메이션 ==== */
         .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.12),rgba(255,255,255,.06)); background-size:200% 100%; animation:s 1.2s linear infinite;}
         @keyframes s {0%{background-position:0 0}100%{background-position:-200% 0}}
     </style>
 </head>
 <body>
-<div class="wrap">
-    <div class="app-title">
+<div class="wrap"> <!-- 전체 앱 컨테이너 -->
+    <div class="app-title"> <!-- 상단 타이틀/로고 -->
         <div class="logo">🏦</div>
         <div>
             <h1 style="margin:0;color:#fff;">Focus Bank</h1>
@@ -70,51 +82,61 @@
         </div>
     </div>
 
-    <!-- 탭 -->
+    <!-- ==== 탭 메뉴 ==== -->
     <div class="tabs">
-        <div id="tab-dashboard" class="tab">대시보드</div>
-        <div id="tab-reports" class="tab">리포트</div>
+        <div id="tab-dashboard" class="tab">대시보드</div> <!-- 메인 화면 -->
+        <div id="tab-reports" class="tab">리포트</div>   <!-- 리포트 화면 -->
     </div>
 
-    <!-- [뷰1] 대시보드 -->
+    <!-- [뷰1] 대시보드 화면 -->
     <section id="view-dashboard">
         <div class="grid">
+            <!-- 내 정보 카드 -->
             <div class="card">
                 <h2 class="section-title">내 정보</h2>
+                <!-- 익명 ID 표시 -->
                 <div class="row"><div>식별자</div><div id="anonDisplay" class="pill mono">anon-????</div></div>
+                <!-- 현재 상태 (대기/입금 중) -->
                 <div class="row"><div>현재 상태</div><div id="statusPill" class="pill">대기 중</div></div>
+                <!-- 실시간 타이머 -->
                 <div class="row"><div>진행 타이머</div><div id="liveTimer" class="mono timer">00:00:00</div></div>
+                <!-- 버튼 영역 -->
                 <div class="btns">
-                    <button id="btnDeposit" class="btn-deposit">입금하기</button>
-                    <button id="btnSettle" class="btn-settle" disabled>정산하기</button>
-                    <button class="pill" id="btnGoReports">리포트 보기</button>
+                    <button id="btnDeposit" class="btn-deposit">입금하기</button> <!-- 집중 시작 -->
+                    <button id="btnSettle" class="btn-settle" disabled>정산하기</button> <!-- 집중 종료 -->
+                    <button class="pill" id="btnGoReports">리포트 보기</button> <!-- 리포트 화면으로 이동 -->
                 </div>
                 <div class="hero">💡 <span>입금은 집중 시작, 정산은 종료를 의미해요.</span></div>
             </div>
 
+            <!-- 오늘 집중 합계 카드 -->
             <div class="card">
                 <h2 class="section-title">일일 입금된 집중</h2>
-                <div class="balance" id="todayTotal">--:--:--</div>
+                <div class="balance" id="todayTotal">--:--:--</div> <!-- 오늘 누적 집중 -->
                 <div class="muted">오늘 누적 집중 시간</div>
             </div>
         </div>
 
         <div class="grid">
+            <!-- 이번 주 집중 합계 -->
             <div class="card">
                 <h2 class="section-title">이번 주 합계</h2>
                 <div class="balance" id="thisWeekTotal">--:--:--</div>
                 <div class="muted">월요일~오늘 기준(ISO 주)</div>
             </div>
 
+            <!-- 이번 달 집중 합계 -->
             <div class="card">
                 <h2 class="section-title">이번 달 합계</h2>
                 <div class="balance" id="thisMonthTotal">--:--:--</div>
                 <div class="muted">1일~오늘 기준</div>
             </div>
 
+            <!-- 목표 진행률 카드 -->
             <div class="card" style="grid-column: 1 / -1">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <h2 class="section-title" style="margin:0;">목표 진행률</h2>
+                    <!-- 보기 단위 선택 (일/주/월) -->
                     <select id="goalViewPeriod" class="pill" style="margin-left:auto">
                         <option value="daily" selected>일간</option>
                         <option value="weekly">주간</option>
@@ -124,48 +146,52 @@
                 </div>
                 <div class="row">
                     <div class="muted">달성률</div>
-                    <div id="goalPct" class="pill">미설정</div>
+                    <div id="goalPct" class="pill">미설정</div> <!-- 목표 달성 퍼센트 -->
                 </div>
-                <div class="progress"><div id="goalBar" class="bar"></div></div>
+                <div class="progress"><div id="goalBar" class="bar"></div></div> <!-- 진행률 바 -->
                 <div class="muted" id="goalDesc" style="margin-top:8px;">목표를 설정해 보세요.</div>
             </div>
 
-            <!-- [남김] 세션별 막대 (오늘) -->
+            <!-- 세션별 막대 (오늘 집중 기록) -->
             <div class="card" style="grid-column: 1 / -1">
                 <div style="display:flex;align-items:center;justify-content:space-between;">
                     <h2 class="section-title" style="margin:0;">각 회차 집중 (오늘)</h2>
                     <div class="muted" id="sessionBarHint">집중 시간(분)</div>
                 </div>
                 <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px; position:relative;">
-                    <canvas id="sessionBarCanvas"></canvas>
+                    <canvas id="sessionBarCanvas"></canvas> <!-- 막대 그래프 -->
                     <div id="sessionBarEmpty" class="muted" style="display:none;margin-top:6px;">오늘 세션이 아직 없어요.</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- [뷰2] 리포트 -->
+    <!-- [뷰2] 리포트 화면 -->
     <section id="view-reports" hidden>
         <div class="grid">
             <div class="card" style="grid-column:1 / -1">
                 <h2 class="section-title" style="display:flex;align-items:center;gap:8px;">
                     주간/월간 집중 리포트
                     <span class="muted" style="margin-left:auto;">표시 단위</span>
+                    <!-- 차트 표시 단위 선택 -->
                     <select id="chartUnit" class="pill">
                         <option value="auto" selected>자동</option>
                         <option value="minutes">분</option>
                         <option value="hours">시간(소수)</option>
                     </select>
                 </h2>
+                <!-- 주간/월간 버튼 -->
                 <div class="btns" style="margin-bottom:8px;">
                     <button class="pill" id="btnWeekly" data-mode="weekly">주간</button>
                     <button class="pill" id="btnMonthly" data-mode="monthly">월간</button>
                 </div>
+                <!-- 리포트 차트 -->
                 <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px; position:relative;">
                     <canvas id="reportChart"></canvas>
-                    <div id="reportError" class="muted" style="display:none;margin-top:8px;"></div>
-                    <div class="muted" id="rangeLabel" style="margin-top:6px;"></div>
+                    <div id="reportError" class="muted" style="display:none;margin-top:8px;"></div> <!-- 오류 표시 -->
+                    <div class="muted" id="rangeLabel" style="margin-top:6px;"></div> <!-- 기간 라벨 -->
                 </div>
+                <!-- KPI 카드 (총합, 평균) -->
                 <div class="grid" style="margin-top:16px;">
                     <div class="card">
                         <div>총 집중시간</div>
@@ -185,10 +211,11 @@
     <div class="footer">© Focus Bank · 단일 페이지 대시보드 (Thymeleaf + JS)</div>
 </div>
 
-<!-- 목표 설정 모달 -->
+<!-- 목표 설정 모달 (팝업) -->
 <div id="goalModal" class="modal-backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goalTitle">
         <h3 id="goalTitle">목표 설정</h3>
+        <!-- 기간 선택 -->
         <div class="field">
             <label for="goalPeriod">기간</label>
             <select id="goalPeriod">
@@ -197,6 +224,7 @@
                 <option value="MONTHLY">월간</option>
             </select>
         </div>
+        <!-- 목표 시간 입력 -->
         <div class="field">
             <label for="goalHours">목표 시간</label>
             <div style="display:flex;gap:8px;">
@@ -205,11 +233,13 @@
             </div>
             <small class="muted">예: 2시간 30분 → 2와 30 입력</small>
         </div>
+        <!-- 시작일 선택 -->
         <div class="field">
             <label for="goalFrom">시작일(선택)</label>
             <input id="goalFrom" type="date" />
             <small class="muted">비우면 오늘부터 적용</small>
         </div>
+        <!-- 버튼 영역 -->
         <div class="actions">
             <button id="btnCloseGoal" class="btn-ghost">취소</button>
             <button id="btnSaveGoal" class="btn-brand">저장</button>
@@ -217,20 +247,23 @@
     </div>
 </div>
 
+<!-- 토스트 메시지 박스 -->
 <div id="toast" class="toast"></div>
 
 <script>
     /* ========= 익명 ID ========= */
+    // 처음 방문 시 로컬스토리지에 익명 사용자 ID(anonId)가 없으면 생성
     (function ensureAnon() {
-        let anonId = localStorage.getItem('anonId');
+        let anonId = localStorage.getItem('anonId'); // 기존 저장된 anonId 불러오기
         if (!anonId) {
-            anonId = generateULID();
-            localStorage.setItem('anonId', anonId);
+            anonId = generateULID();                 // 없으면 새로운 ULID 생성
+            localStorage.setItem('anonId', anonId);  // 로컬스토리지에 저장
         }
     })();
-    const anonId = localStorage.getItem('anonId');
+    const anonId = localStorage.getItem('anonId');   // 항상 anonId를 전역에서 쓸 수 있게 불러옴
 
-    /* ========= DOM ========= */
+    /* ========= DOM 요소 캐싱 ========= */
+    // HTML에서 자주 쓰는 요소들을 미리 변수에 담아두기
     const anonDisplay = document.getElementById('anonDisplay');
     const statusPill  = document.getElementById('statusPill');
     const liveTimerEl = document.getElementById('liveTimer');
@@ -267,87 +300,157 @@
     const goalFrom    = document.getElementById('goalFrom');
     const goalViewPeriod = document.getElementById('goalViewPeriod');
 
-    // 세션별 막대 DOM
+    // 세션별 막대 그래프 관련 DOM
     const sessionBarCanvas = document.getElementById('sessionBarCanvas');
     const sessionBarEmpty  = document.getElementById('sessionBarEmpty');
 
+    // 사용자 ID 마스킹해서 화면에 표시 (ex: anon-AB12)
     anonDisplay.textContent = maskAnon(anonId);
 
-    /* ========= 라우팅 ========= */
+    /* ========= 라우팅 (탭 전환) ========= */
+    // 버튼 클릭 → 특정 hash로 이동
     btnGoReports.addEventListener('click', () => navigate('#/reports'));
+
+    // 각 화면에 대응하는 함수 정의
     const routes = {
-        '#/dashboard': () => { setActiveTab('dashboard'); showView('view-dashboard'); },
-        '#/reports': async () => {
-            setActiveTab('reports'); showView('view-reports');
-            if (!window.__chartLoaded) { await loadChartJs(); window.__chartLoaded = true; }
-            if (!window.__reportMode) window.__reportMode = 'weekly';
-            if (!window.__chartUnit)  window.__chartUnit  = chartUnitSel.value || 'auto';
-            await renderReport(window.__reportMode);
+        '#/dashboard': () => { // 대시보드 화면 표시
+            setActiveTab('dashboard');
+            showView('view-dashboard');
+        },
+        '#/reports': async () => { // 리포트 화면 표시
+            setActiveTab('reports');
+            showView('view-reports');
+            if (!window.__chartLoaded) { // 차트 라이브러리 최초 로드
+                await loadChartJs();
+                window.__chartLoaded = true;
+            }
+            if (!window.__reportMode) window.__reportMode = 'weekly'; // 기본 모드: 주간
+            if (!window.__chartUnit)  window.__chartUnit  = chartUnitSel.value || 'auto'; // 단위 기본값
+            await renderReport(window.__reportMode); // 차트 렌더링
         }
     };
-    function navigate(hash){ if (location.hash === hash) routes[hash]?.(); else location.hash = hash; }
+
+    // 해시 변경 시 해당 화면으로 이동
+    function navigate(hash){
+        if (location.hash === hash) routes[hash]?.();
+        else location.hash = hash;
+    }
+
+    // 탭 활성화 표시
     function setActiveTab(name){
         tabDashboard.classList.toggle('active', name === 'dashboard');
         tabReports.classList.toggle('active', name === 'reports');
     }
+
+    // 화면 전환 (대시보드/리포트 show/hide)
     function showView(id){
         document.getElementById('view-dashboard').hidden = id !== 'view-dashboard';
         document.getElementById('view-reports').hidden   = id !== 'view-reports';
     }
-    function router(){ const hash = location.hash || '#/dashboard'; (routes[hash] || routes['#/dashboard'])(); }
+
+    // 라우터 실행 (현재 hash 기반으로)
+    function router(){
+        const hash = location.hash || '#/dashboard';
+        (routes[hash] || routes['#/dashboard'])();
+    }
+
+    // 이벤트 연결: 해시 변경 / 페이지 로드 시 라우터 실행
     window.addEventListener('hashchange', router);
     window.addEventListener('load', router);
+
+    // 탭 클릭 이벤트 → 해시 변경
     tabDashboard.addEventListener('click', () => navigate('#/dashboard'));
     tabReports  .addEventListener('click', () => navigate('#/reports'));
 
     /* ========= 리포트/차트 ========= */
-    async function loadChartJs(){ await import('https://cdn.jsdelivr.net/npm/chart.js'); }
-    btnWeekly.addEventListener('click', () => { window.__reportMode = 'weekly'; renderReport('weekly'); });
-    btnMonthly.addEventListener('click', () => { window.__reportMode = 'monthly'; renderReport('monthly'); });
-    chartUnitSel?.addEventListener('change', () => { window.__chartUnit = chartUnitSel.value; renderReport(window.__reportMode); });
+    // Chart.js 라이브러리 동적 로딩 (CDN에서 불러옴)
+    async function loadChartJs(){
+        await import('https://cdn.jsdelivr.net/npm/chart.js');
+    }
 
+    // 주간 버튼 클릭 시 → 주간 모드로 리포트 렌더링
+    btnWeekly.addEventListener('click', () => {
+        window.__reportMode = 'weekly';
+        renderReport('weekly');
+    });
+
+    // 월간 버튼 클릭 시 → 월간 모드로 리포트 렌더링
+    btnMonthly.addEventListener('click', () => {
+        window.__reportMode = 'monthly';
+        renderReport('monthly');
+    });
+
+    // 단위 선택 변경 시 (자동/분/시간) → 리렌더링
+    chartUnitSel?.addEventListener('change', () => {
+        window.__chartUnit = chartUnitSel.value;
+        renderReport(window.__reportMode);
+    });
+
+    // 차트 객체 저장용 전역 변수
     let reportChart;
+
+    // 리포트 렌더링 (주간/월간)
     async function renderReport(mode){
         const box = reportCanvas.parentElement;
+
+        // 차트 자리에 스켈레톤(로딩 애니메이션) 넣기
         const placeholder = document.createElement('div');
-        placeholder.className='skeleton'; placeholder.style.height='360px'; placeholder.style.borderRadius='12px';
+        placeholder.className='skeleton';
+        placeholder.style.height='360px';
+        placeholder.style.borderRadius='12px';
         box.insertBefore(placeholder, reportCanvas);
 
         try{
+            // API 호출 URL 선택 (주간 or 월간)
             const url = mode === 'weekly'
-                ? `/api/reports/weekly?weeks=12`
-                : `/api/reports/monthly?months=12`;
+                ? `/api/reports/weekly?weeks=12`   // 최근 12주
+                : `/api/reports/monthly?months=12`; // 최근 12개월
+
+            // 서버에서 데이터 요청 (헤더에 anonId 포함)
             const res = await fetch(url, { headers: { 'X-ANON-ID': anonId } });
             if (!res.ok) throw new Error('리포트 로딩 실패');
             const data = await res.json();
 
+            // 데이터에서 x축 라벨(기간) / y축 값(초) 추출
             const labels  = data.map(d => d.period);
             const totalsS = data.map(d => (d.totalSeconds || 0));
 
+            // 표시 단위 결정 (분 or 시간)
             const userUnit = window.__chartUnit || 'auto';
-            const maxMinutes = Math.max(0, ...totalsS.map(s => Math.round(s/60)));
+            const maxMinutes = Math.max(0, ...totalsS.map(s => Math.round(s/60))); // 최댓값 분 단위
             let unit = userUnit;
             if (userUnit === 'auto') {
+                // 주간: 120분 미만이면 '분', 아니면 '시간'
+                // 월간: 무조건 '시간'
                 unit = (mode === 'weekly') ? (maxMinutes < 120 ? 'minutes' : 'hours') : 'hours';
             }
             window.__effectiveUnit = unit;
 
+            // y축 값 변환 (분 단위 or 시간 단위)
             const series = unit === 'minutes'
-                ? totalsS.map(s => Math.round(s/60))
-                : totalsS.map(s => Number((s/3600).toFixed(1)));
+                ? totalsS.map(s => Math.round(s/60))        // 분
+                : totalsS.map(s => Number((s/3600).toFixed(1))); // 시간 (소수점 1자리)
 
+            // KPI(총합, 평균) 계산
             const totalSec = totalsS.reduce((a,b)=> a + b, 0);
-            const avgSec   = data.length ? Math.round(data.reduce((a,b)=> a + (b.avgSecPerDay || 0), 0) / data.length) : 0;
-            kpiTotal.textContent = secToHMS(totalSec);
-            kpiAvg.textContent   = (avgSec < 3600) ? `${Math.round(avgSec/60)}분` : `${(avgSec/3600).toFixed(1)}시간`;
+            const avgSec   = data.length
+                ? Math.round(data.reduce((a,b)=> a + (b.avgSecPerDay || 0), 0) / data.length)
+                : 0;
+
+            // KPI 표시 업데이트
+            kpiTotal.textContent = secToHMS(totalSec); // 총합
+            kpiAvg.textContent   = (avgSec < 3600)
+                ? `${Math.round(avgSec/60)}분`         // 1시간 미만 → 분 단위
+                : `${(avgSec/3600).toFixed(1)}시간`;   // 1시간 이상 → 시간 단위
             rangeLabel.textContent = mode === 'weekly' ? '최근 12주' : '최근 12개월';
 
+            // 기존 차트가 있으면 제거 후 다시 그림
             if (reportChart) reportChart.destroy();
             const ctx = reportCanvas.getContext('2d');
             reportChart = new Chart(ctx, {
-                type: 'line',
+                type: 'line', // 꺾은선 그래프
                 data: {
-                    labels,
+                    labels, // x축 라벨 (기간)
                     datasets: [{
                         label: mode === 'weekly'
                             ? (unit==='minutes' ? '주간 총 집중(분)' : '주간 총 집중(시간)')
@@ -356,17 +459,21 @@
                     }]
                 },
                 options: {
-                    responsive:true,
+                    responsive:true, // 반응형
                     maintainAspectRatio:false,
                     scales:{
                         y:{
-                            beginAtZero:true,
-                            ticks:{ callback:(v)=> unit==='minutes' ? formatMinutesTick(v) : `${v}h` }
+                            beginAtZero:true, // 0부터 시작
+                            ticks:{
+                                // y축 라벨 포맷 (분/시간)
+                                callback:(v)=> unit==='minutes' ? formatMinutesTick(v) : `${v}h`
+                            }
                         }
                     },
                     plugins:{
                         tooltip:{
                             callbacks:{
+                                // 툴팁 포맷팅 (분/시간 변환)
                                 label:(ctx)=> {
                                     const v = ctx.parsed.y;
                                     if (unit === 'minutes') return formatMinutesTick(v);
@@ -379,15 +486,18 @@
                 }
             });
             reportCanvas.parentElement.style.height = '360px';
-            reportError.style.display = 'none';
+            reportError.style.display = 'none'; // 에러 숨김
         } catch(e){
+            // 에러 발생 시 에러 메시지 표시 + 재시도 버튼
             reportError.style.display = 'block';
             reportError.innerHTML = `리포트를 불러오지 못했어요. <button class="pill" onclick="renderReport('${mode}')">재시도</button>`;
         } finally {
+            // 로딩 스켈레톤 제거
             placeholder.remove();
         }
     }
 
+    // y축 눈금 포맷터 (분 → "시간 분" 형태로 변환)
     function formatMinutesTick(v){
         const m = Math.round(Number(v)||0);
         if (m < 60) return `${m}분`;
@@ -396,179 +506,342 @@
     }
 
     /* ========= 입금/정산 ========= */
+    // 현재 실행 중인 세션 ID / 타이머 핸들러 / 시작 시간(ms)
     let currentSessionId = null, tickTimer = null, startedAtMs = null;
 
+    // 입금하기(집중 시작) 버튼을 눌렀을 때 실행
     async function onDeposit() {
         try {
-            btnDeposit.disabled = true;
-            const res = await fetch('/api/sessions/deposit', { method: 'POST', headers: { 'X-ANON-ID': anonId } });
-            if (res.status === 409){ showToast('이미 진행 중인 세션이 있습니다.', true); btnDeposit.disabled = false; return; }
-            if (!res.ok) throw new Error(await res.text());
-            const data = await res.json();
-            currentSessionId = data.sessionId;
-            startedAtMs = Date.parse(data.startedAt ?? data.createdAt);
-            setStatusRunning(); startTick(); showToast('입금이 시작되었습니다! ✨');
+            btnDeposit.disabled = true; // 중복 클릭 방지 (버튼 비활성화)
 
-            logStart(currentSessionId, startedAtMs);
-            await renderSessionBars();
-        } catch (e) { showToast('입금 실패: ' + (e.message || e), true); btnDeposit.disabled = false; }
-    }
-    async function onSettle() {
-        if (!currentSessionId){ showToast('진행 중인 입금(집중)이 없습니다.', true); return; }
-        try {
-            btnSettle.disabled = true;
-            const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
-            if (res.status === 409){ showToast('이미 종료된 세션입니다.', true); btnSettle.disabled = false; return; }
+            // 서버에 POST 요청 → 새로운 세션 생성
+            const res = await fetch('/api/sessions/deposit', {
+                method: 'POST',
+                headers: { 'X-ANON-ID': anonId } // 사용자 식별자 전달
+            });
+
+            // 이미 진행 중인 세션이 있으면 409 Conflict 응답 → 안내 메시지
+            if (res.status === 409){
+                showToast('이미 진행 중인 세션이 있습니다.', true);
+                btnDeposit.disabled = false;
+                return;
+            }
+
+            // 응답이 실패하면 예외 처리
             if (!res.ok) throw new Error(await res.text());
+
+            // 정상 응답 → 세션 정보 JSON 파싱
             const data = await res.json();
-            stopTick(); setStatusIdle();
+            currentSessionId = data.sessionId;                       // 세션 ID 저장
+            startedAtMs = Date.parse(data.startedAt ?? data.createdAt); // 시작 시간 기록
+
+            // UI 상태 업데이트: "입금 중" 표시, 타이머 시작
+            setStatusRunning();
+            startTick();
+            showToast('입금이 시작되었습니다! ✨');
+
+            // 로컬 세션 로그 기록 (브라우저 저장소)
+            logStart(currentSessionId, startedAtMs);
+
+            // 세션 막대 차트 다시 렌더링
+            await renderSessionBars();
+        } catch (e) {
+            showToast('입금 실패: ' + (e.message || e), true);
+            btnDeposit.disabled = false; // 실패 시 버튼 다시 활성화
+        }
+    }
+
+    // 정산하기(집중 종료) 버튼을 눌렀을 때 실행
+    async function onSettle() {
+        if (!currentSessionId){
+            showToast('진행 중인 입금(집중)이 없습니다.', true);
+            return;
+        }
+        try {
+            btnSettle.disabled = true; // 중복 클릭 방지
+
+            // 서버에 POST 요청 → 해당 세션 종료
+            const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
+
+            // 이미 종료된 세션일 경우 → 안내 메시지
+            if (res.status === 409){
+                showToast('이미 종료된 세션입니다.', true);
+                btnSettle.disabled = false;
+                return;
+            }
+
+            if (!res.ok) throw new Error(await res.text());
+
+            // 종료된 세션 정보 응답
+            const data = await res.json();
+
+            // UI 상태를 "대기 중"으로 변경 + 타이머 정지
+            stopTick();
+            setStatusIdle();
+
+            // 오늘/주간/월간 합계 다시 불러오기
             await fetchTodaySummary();
             await fetchThisWeekTotal();
             await fetchThisMonthTotal();
             await fetchGoalProgress(goalViewPeriod.value || 'daily');
+
+            // 종료 알림 (세션 시간 표시)
             showToast(`정산 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
 
+            // 로컬 로그에 종료 기록
             logEnd(currentSessionId, Date.now());
+
+            // 세션 막대 차트 다시 렌더링
             await renderSessionBars();
-        } catch (e) { showToast('정산 실패: ' + (e.message || e), true); btnSettle.disabled = false; }
+        } catch (e) {
+            showToast('정산 실패: ' + (e.message || e), true);
+            btnSettle.disabled = false;
+        }
     }
+
+    // UI 상태를 "입금 중"으로 변경
     function setStatusRunning(){
         statusPill.textContent='입금 중';
         statusPill.style.background='rgba(34,197,94,.15)';
         statusPill.style.borderColor='rgba(34,197,94,.35)';
-        btnSettle.disabled=false; btnDeposit.disabled=true;
-        persistActiveSession();
+        btnSettle.disabled=false; // 정산 버튼 활성화
+        btnDeposit.disabled=true; // 입금 버튼 비활성화
+        persistActiveSession();   // 현재 세션 상태를 로컬스토리지에 저장
     }
+
+    // UI 상태를 "대기 중"으로 변경
     function setStatusIdle(){
         statusPill.textContent='대기 중';
         statusPill.style.background='rgba(255,255,255,.06)';
         statusPill.style.borderColor='rgba(255,255,255,.12)';
-        btnSettle.disabled=true; btnDeposit.disabled=false;
-        liveTimerEl.textContent='00:00:00'; currentSessionId=null; startedAtMs=null;
-        persistActiveSession();
+        btnSettle.disabled=true;  // 정산 버튼 비활성화
+        btnDeposit.disabled=false;// 입금 버튼 활성화
+        liveTimerEl.textContent='00:00:00'; // 타이머 리셋
+        currentSessionId=null;
+        startedAtMs=null;
+        persistActiveSession();   // 세션 상태 저장 (없으면 초기화)
     }
+
+    // 실시간 타이머 시작
     function startTick(){
-        if (!startedAtMs) startedAtMs=Date.now();
+        if (!startedAtMs) startedAtMs=Date.now(); // 시작 시간 기록
+        // 즉시 한 번 표시
         liveTimerEl.textContent=fmtSec(Math.floor((Date.now()-startedAtMs)/1000));
+        // 1초마다 업데이트
         tickTimer=setInterval(()=>{
             const sec=Math.floor((Date.now()-startedAtMs)/1000);
             liveTimerEl.textContent=fmtSec(sec);
         },1000);
+
+        // 세션 막대도 실시간 갱신
         startLiveUiTick();
-        persistActiveSession();
-    }
-    function stopTick(){
-        if (tickTimer) clearInterval(tickTimer);
-        stopLiveUiTick();
+
+        // 상태 저장
         persistActiveSession();
     }
 
+    // 실시간 타이머 정지
+    function stopTick(){
+        if (tickTimer) clearInterval(tickTimer); // setInterval 해제
+        stopLiveUiTick(); // 막대 갱신도 정지
+        persistActiveSession(); // 상태 저장
+    }
+
     /* ========= 오늘 요약 ========= */
+    // 오늘 하루 누적 집중 시간 가져오기
     async function fetchTodaySummary(){
+        // 오늘 날짜 yyyy-MM-dd 문자열 생성
         const d = new Date();
         const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
         const dateStr = `${yyyy}-${mm}-${dd}`;
         try{
+            // 서버에 오늘 요약 API 요청
             const res = await fetch(`/api/reports/summary?date=${dateStr}`, { headers: {'X-ANON-ID': anonId} });
             if(res.ok){
                 const json = await res.json();
+                // totalSec 또는 totalSeconds 값으로 오늘 합계 표시
                 todayTotal.textContent = fmtSec((json.totalSec ?? json.totalSeconds) || 0);
-            } else { todayTotal.textContent = '--:--:--'; }
-        }catch(_){ todayTotal.textContent = '--:--:--'; }
+            } else {
+                // 실패 시 기본값 표시
+                todayTotal.textContent = '--:--:--';
+            }
+        }catch(_){
+            // 네트워크 오류 발생 시 기본값 표시
+            todayTotal.textContent = '--:--:--';
+        }
     }
+
+    // 이번 주 누적 집중 시간 가져오기
     async function fetchThisWeekTotal(){
         try{
             const res = await fetch(`/api/reports/weekly?weeks=1`, { headers: {'X-ANON-ID': anonId} });
             const arr = res.ok ? await res.json() : [];
+            // 첫 주차 데이터의 totalSeconds 가져오기
             const sec = Array.isArray(arr) && arr.length ? (arr[0].totalSeconds || 0) : 0;
             thisWeekTotal.textContent = fmtSec(sec);
-        }catch(_){ thisWeekTotal.textContent='--:--:--'; }
+        }catch(_){
+            thisWeekTotal.textContent='--:--:--';
+        }
     }
+
+    // 이번 달 누적 집중 시간 가져오기
     async function fetchThisMonthTotal(){
         try{
             const res = await fetch(`/api/reports/monthly?months=1`, { headers: {'X-ANON-ID': anonId} });
             const arr = res.ok ? await res.json() : [];
+            // 첫 달 데이터의 totalSeconds 가져오기
             const sec = Array.isArray(arr) && arr.length ? (arr[0].totalSeconds || 0) : 0;
             thisMonthTotal.textContent = fmtSec(sec);
-        }catch(_){ thisMonthTotal.textContent='--:--:--'; }
+        }catch(_){
+            thisMonthTotal.textContent='--:--:--';
+        }
     }
 
     /* ========= 목표 진행률 ========= */
+    // 목표 보기 기간(daily/weekly/monthly) 변경 이벤트
     goalViewPeriod.addEventListener('change', ()=> fetchGoalProgress(goalViewPeriod.value));
+
+    // 목표 진행률 API 호출 및 UI 업데이트
     async function fetchGoalProgress(period){
         try{
+            // 서버에 목표 진행률 요청
             const res = await fetch(`/api/goals/progress?period=${period}`, { headers: {'X-ANON-ID': anonId} });
             if(!res.ok){ setGoalUnset(); return; }
             const j = await res.json();
             if (!j || j.targetSeconds == null){ setGoalUnset(); return; }
+
+            // 진행률 계산 (progress 있으면 사용, 없으면 achieved/target 계산)
             const base = (j.progress ?? (j.achievedSeconds/j.targetSeconds)) || 0;
             const pct = Math.min(100, Math.round(base*100));
+
+            // UI 업데이트
             goalPct.textContent = `${pct}%`;
             goalBar.style.width = `${pct}%`;
             goalDesc.textContent = `${periodLabel(period)} ${fmtSec(j.achievedSeconds||0)} / 목표 ${fmtSec(j.targetSeconds||0)}`;
-        }catch(_){ setGoalUnset(); }
+        }catch(_){
+            setGoalUnset();
+        }
     }
+
+    // 목표 미설정 상태 UI 처리
     function setGoalUnset(){
         goalPct.textContent = '미설정';
         goalBar.style.width = '0%';
         goalDesc.textContent = '목표를 설정해 보세요.';
     }
-    function periodLabel(p){ return p==='weekly'?'이번 주':(p==='monthly'?'이번 달':'오늘'); }
+
+    // 기간 라벨 변환 함수
+    function periodLabel(p){
+        return p==='weekly'?'이번 주':(p==='monthly'?'이번 달':'오늘');
+    }
 
     /* ========= 목표 설정 모달 ========= */
+    // 목표 설정 모달 열기
     btnOpenGoal.addEventListener('click', () => {
         goalPeriod.value = 'DAILY';
         goalHours.value = '';
         goalMinutes.value = '';
         goalFrom.value = '';
-        goalModal.classList.add('show-flex');
+        goalModal.classList.add('show-flex'); // 모달 보이기
         goalModal.setAttribute('aria-hidden','false');
-        setTimeout(()=>goalHours.focus(), 0);
+        setTimeout(()=>goalHours.focus(), 0); // 입력창에 자동 포커스
     });
+
+    // 모달 닫기 버튼
     btnCloseGoal.addEventListener('click', closeGoalModal);
+
+    // 모달에서 ESC → 닫기 / Enter → 저장 동작
     goalModal.addEventListener('keydown', (e)=>{
         if (e.key === 'Escape') { e.preventDefault(); closeGoalModal(); }
         if (e.key === 'Enter')  { e.preventDefault(); btnSaveGoal.click(); }
     });
+
+    // 목표 저장 버튼 동작
     btnSaveGoal.addEventListener('click', async () => {
         try{
+            // 입력값(시간/분)을 초 단위로 변환
             const hours = parseInt(goalHours.value || '0', 10);
             const mins  = parseInt(goalMinutes.value || '0', 10);
             const seconds = Math.max(0, hours*3600 + mins*60);
             if (!seconds){ showToast('목표 시간을 입력하세요.', true); return; }
-            const body = { periodType: goalPeriod.value, targetSeconds: seconds, effectiveFrom: goalFrom.value || undefined };
+
+            // API 요청 바디 생성
+            const body = {
+                periodType: goalPeriod.value,
+                targetSeconds: seconds,
+                effectiveFrom: goalFrom.value || undefined
+            };
+
+            // 서버에 목표 저장 요청
             const res = await fetch('/api/goals', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-ANON-ID': anonId }, body: JSON.stringify(body)
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-ANON-ID': anonId },
+                body: JSON.stringify(body)
             });
-            if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(t || '목표 저장 실패'); }
-            closeGoalModal(); showToast('목표가 저장되었습니다. ✅');
+            if(!res.ok){
+                const t = await res.text().catch(()=> '');
+                throw new Error(t || '목표 저장 실패');
+            }
+
+            // 성공 시 UI 업데이트
+            closeGoalModal();
+            showToast('목표가 저장되었습니다.');
             await fetchGoalProgress(goalViewPeriod.value || 'daily');
-        }catch(e){ showToast(e.message || '오류가 발생했습니다.', true); }
+        }catch(e){
+            showToast(e.message || '오류가 발생했습니다.', true);
+        }
     });
-    function closeGoalModal(){ goalModal.classList.remove('show-flex'); goalModal.setAttribute('aria-hidden','true'); }
+
+    // 모달 닫기 함수
+    function closeGoalModal(){
+        goalModal.classList.remove('show-flex');
+        goalModal.setAttribute('aria-hidden','true');
+    }
 
     /* ========= 더블클릭 방지 ========= */
-    let inFlight = new Set();
-    async function safeCall(key, fn){ if (inFlight.has(key)) return; inFlight.add(key); try{ await fn(); } finally { inFlight.delete(key); } }
+    let inFlight = new Set(); // 실행 중인 작업 저장
+    async function safeCall(key, fn){
+        if (inFlight.has(key)) return; // 이미 실행 중이면 무시
+        inFlight.add(key);
+        try{
+            await fn();
+        } finally {
+            inFlight.delete(key); // 실행 끝나면 제거
+        }
+    }
+    // 입금/정산 버튼 클릭 시 중복 실행 방지
     btnDeposit.addEventListener('click', ()=> safeCall('deposit', onDeposit));
     btnSettle .addEventListener('click', ()=> safeCall('settle',  onSettle));
 
     /* ========= 세션 로컬 저장 ========= */
+    // localStorage 키 이름 정의
     const LS_KEYS = { activeSession: 'fb.activeSession', sessionLog: 'fb.sessionLog' };
+
+    // 현재 세션 상태 저장
     function persistActiveSession() {
-        if (currentSessionId && startedAtMs) localStorage.setItem(LS_KEYS.activeSession, JSON.stringify({ sessionId: currentSessionId, startedAtMs }));
-        else localStorage.removeItem(LS_KEYS.activeSession);
+        if (currentSessionId && startedAtMs)
+            localStorage.setItem(LS_KEYS.activeSession, JSON.stringify({ sessionId: currentSessionId, startedAtMs }));
+        else
+            localStorage.removeItem(LS_KEYS.activeSession);
     }
+
+    // 세션 기록 불러오기
     function loadSessionLog(){
         try{ return JSON.parse(localStorage.getItem(LS_KEYS.sessionLog) || '{}'); }
         catch(_){ return {}; }
     }
+
+    // 세션 기록 저장
     function saveSessionLog(map){ localStorage.setItem(LS_KEYS.sessionLog, JSON.stringify(map)); }
+
+    // timestamp → yyyy-MM-dd 변환
     function dayKeyFromMs(ms){
         const d = new Date(typeof ms === 'number' ? ms : Date.now());
         const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
         return `${yyyy}-${mm}-${dd}`;
     }
+
+    // 세션 시작 기록 저장
     function logStart(sessionId, startedAtMs){
         const map = loadSessionLog();
         const key = dayKeyFromMs(startedAtMs);
@@ -578,12 +851,14 @@
             saveSessionLog(map);
         }
     }
+
+    // 세션 종료 기록 저장
     function logEnd(sessionId, endedAtMs){
         const map = loadSessionLog();
         Object.keys(map).forEach(k=>{
             const s = map[k]?.find(x => x.sessionId === sessionId);
             if (s) {
-                // endedAt이 없을 때만 새로 기록 (한번 기록된 건 덮어쓰지 않음)
+                // endedAt이 없는 경우에만 기록 추가
                 if (!s.endedAt) {
                     s.endedAt = new Date(endedAtMs).toISOString();
                 }
@@ -591,42 +866,50 @@
         });
         saveSessionLog(map);
     }
+
+    // 특정 날짜의 세션 목록 가져오기
     function getLocalSessionsFor(dateStr){
         const map = loadSessionLog();
         return Array.isArray(map[dateStr]) ? map[dateStr] : [];
     }
 
     /* ========= 세션별 막대 ========= */
+    // 오늘 날짜를 yyyy-MM-dd 문자열로 변환
     function todayStr(){
         const d = new Date();
         const yyyy = d.getFullYear(), mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
         return `${yyyy}-${mm}-${dd}`;
     }
+
+    // 분 단위 값을 사람이 읽기 좋은 문자열(시간/분)로 변환
     function fmtMinK(m){
-        if (m < 60) return `${m}분`;
+        if (m < 60) return `${m}분`; // 1시간 미만이면 그냥 분 단위
         const h = Math.floor(m/60), mm = m % 60;
-        return mm ? `${h}시간 ${mm}분` : `${h}시간`;
+        return mm ? `${h}시간 ${mm}분` : `${h}시간`; // 1시간 이상이면 시간+분
     }
+
+    // 오늘 날짜 기준으로 서버/로컬 세션 목록 합치기
     async function fetchTodaySessions(){
-        const date = todayStr();
-        const localArr = getLocalSessionsFor(date);
+        const date = todayStr(); // 오늘 날짜 문자열
+        const localArr = getLocalSessionsFor(date); // 로컬에 저장된 세션들
         let serverArr = [];
         try {
+            // 서버에서 오늘 날짜의 세션 목록 가져오기
             const res = await fetch(`/api/sessions?date=${date}`, { headers: { 'X-ANON-ID': anonId } });
             if (res.ok) serverArr = await res.json();
         } catch(_) {}
 
-        const byId = new Map();
+        const byId = new Map(); // sessionId 기준으로 합치기
         const upsert = (s)=>{
-            if (!s || !s.sessionId || !s.startedAt) return;
+            if (!s || !s.sessionId || !s.startedAt) return; // 필수값 없으면 무시
             const prev = byId.get(s.sessionId);
             if (!prev) { byId.set(s.sessionId, s); return; }
 
-            // 시작은 더 이른 값
+            // 시작 시각은 더 이른 값 선택
             const startedAt =
                 new Date(prev.startedAt) <= new Date(s.startedAt) ? prev.startedAt : s.startedAt;
 
-            // 종료는 "있는 값 우선", 둘 다 있으면 더 늦은 값
+            // 종료 시각은 있는 값 우선, 둘 다 있으면 더 늦은 값 선택
             const pEnd = prev.endedAt ? new Date(prev.endedAt) : null;
             const sEnd = s.endedAt ? new Date(s.endedAt) : null;
             let endedAt = null;
@@ -634,13 +917,15 @@
             else if (!pEnd && sEnd) endedAt = s.endedAt;
             else if (pEnd && sEnd) endedAt = (pEnd >= sEnd) ? prev.endedAt : s.endedAt;
 
+            // 병합한 값으로 업데이트
             byId.set(s.sessionId, { ...prev, ...s, startedAt, endedAt });
         };
 
+        // 로컬/서버 데이터 병합
         localArr.forEach(upsert);
         serverArr.forEach(upsert);
 
-        // 진행 중 세션 오버레이 (현재 회차만 open)
+        // 현재 진행 중 세션이 있으면 강제로 추가
         if (currentSessionId && startedAtMs){
             const prev = byId.get(currentSessionId) || {};
             byId.set(currentSessionId, {
@@ -651,24 +936,31 @@
             });
         }
 
+        // startedAt 있는 세션만 반환
         return [...byId.values()].filter(s=>s.startedAt);
     }
 
+    // 세션별 막대 차트 전역 변수
     let sessionBarChart;
-    async function renderSessionBars(){
-        if (!sessionBarCanvas) return;
-        const sessions = await fetchTodaySessions();
 
+    // 세션별 막대 그래프 그리기
+    async function renderSessionBars(){
+        if (!sessionBarCanvas) return; // 캔버스 없으면 종료
+        const sessions = await fetchTodaySessions(); // 오늘 세션 목록 가져오기
+
+        // 시작 시간 기준으로 정렬
         const sorted = sessions
             .filter(s => s.startedAt)
             .sort((a,b)=> new Date(a.startedAt) - new Date(b.startedAt));
 
+        // 세션이 없으면 "아직 없음" 메시지 표시
         if (!sorted.length){
             sessionBarEmpty.style.display = 'block';
             return;
         }
         sessionBarEmpty.style.display = 'none';
 
+        // 각 세션의 라벨: "n회 · hh:mm"
         const labels = sorted.map((s,i)=>{
             const d = new Date(s.startedAt);
             const hh = String(d.getHours()).padStart(2,'0');
@@ -676,7 +968,7 @@
             return `${i+1}회 · ${hh}:${mm}`;
         });
 
-        // 🔑 핵심: endedAt이 없고 다음 세션 시작이 있으면 그 시각으로 종료를 고정(클램핑)
+        // 🔑 핵심: 종료 시각 없으면 다음 세션 시작시간으로 대신 처리
         const dataMin = sorted.map((s,i)=>{
             const start = new Date(s.startedAt);
             const endedAt = s.endedAt ? new Date(s.endedAt) : null;
@@ -684,19 +976,21 @@
 
             let end;
             if (s.sessionId === currentSessionId) {
-                // 현재 진행 중인 회차만 now 기준으로 자라게
+                // 현재 진행 중 세션은 현재 시간으로 계속 증가
                 end = new Date();
             } else {
-                // 이전 회차: 종료값이 있으면 그걸, 없으면 다음 회차 시작으로 고정
-                end = endedAt || nextStart || start; // next가 없고 endedAt도 없으면 0분 처리
+                // 이전 세션은 종료값 → 없으면 다음 시작 → 그것도 없으면 시작시간
+                end = endedAt || nextStart || start;
             }
 
+            // 분 단위로 계산, 음수 방지
             const minutes = Math.max(0, Math.round((end - start)/60000));
             return minutes;
         });
 
+        // Chart.js 로 막대 그래프 그리기
         if (!window.__chartLoaded){ await loadChartJs(); window.__chartLoaded = true; }
-        if (sessionBarChart) sessionBarChart.destroy();
+        if (sessionBarChart) sessionBarChart.destroy(); // 기존 차트 제거
         const ctx = sessionBarCanvas.getContext('2d');
         sessionBarChart = new Chart(ctx, {
             type: 'bar',
@@ -713,27 +1007,47 @@
     // 진행 중일 때 1분마다 막대 갱신
     let liveUiTick;
     function startLiveUiTick(){
-        if (liveUiTick) clearInterval(liveUiTick);
+        if (liveUiTick) clearInterval(liveUiTick); // 기존 타이머 제거
         liveUiTick = setInterval(async ()=>{
             if (currentSessionId){
-                await renderSessionBars();
+                await renderSessionBars(); // 1분마다 그래프 다시 그림
             }
         }, 60000);
     }
     function stopLiveUiTick(){ if (liveUiTick) clearInterval(liveUiTick); }
 
     /* ========= 유틸 ========= */
+    // 토스트 메시지 표시 (짧게 팝업)
     function showToast(msg, error=false){
         toastEl.textContent = msg;
         toastEl.style.borderColor = error ? 'rgba(239,68,68,.5)' : 'rgba(56,189,248,.5)';
         toastEl.classList.add('show');
         setTimeout(()=>toastEl.classList.remove('show'), 2200);
     }
-    function maskAnon(id){ if(!id) return 'anon-****'; const tail=id.slice(-4).toUpperCase(); return 'anon-'+tail; }
-    function fmtSec(s){ const h=String(Math.floor(s/3600)).padStart(2,'0'); const m=String(Math.floor((s%3600)/60)).padStart(2,'0'); const sec=String(Math.floor(s%60)).padStart(2,'0'); return `${h}:${m}:${sec}`; }
-    function secToHMS(sec){ const h=Math.floor(sec/3600); const m=Math.floor((sec%3600)/60); return `${h}시간 ${m}분`; }
 
-    // 간단 ULID
+    // 익명 ID 마스킹 (뒤 4자리만 표시)
+    function maskAnon(id){
+        if(!id) return 'anon-****';
+        const tail=id.slice(-4).toUpperCase();
+        return 'anon-'+tail;
+    }
+
+    // 초 → HH:mm:ss 형식 변환
+    function fmtSec(s){
+        const h=String(Math.floor(s/3600)).padStart(2,'0');
+        const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
+        const sec=String(Math.floor(s%60)).padStart(2,'0');
+        return `${h}:${m}:${sec}`;
+    }
+
+    // 초 → "h시간 m분" 형식 변환
+    function secToHMS(sec){
+        const h=Math.floor(sec/3600);
+        const m=Math.floor((sec%3600)/60);
+        return `${h}시간 ${m}분`;
+    }
+
+    // 간단 ULID 생성기 (랜덤 + 시간 조합)
     function generateULID(){
         const ENCODING = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
         function rand(n){
@@ -742,7 +1056,9 @@
             return Array.from(bytes);
         }
         const time = Date.now(); let t=time; const timeChars=[];
+        // 시간 기반 10자리
         for(let i=0;i<10;i++){ timeChars.push(ENCODING[t%32]); t=Math.floor(t/32); }
+        // 랜덤 16자리
         const randomBytes = rand(16); const randChars=[]; let bits=0,val=0;
         for (let i=0;i<randomBytes.length;i++){
             val=(val<<8)|randomBytes[i];
@@ -758,20 +1074,30 @@
 
     /* ========= 초기화 ========= */
     (function init(){
+        // 저장된 진행 중 세션이 있으면 불러오기
         const saved = localStorage.getItem(LS_KEYS.activeSession);
         if (saved) {
             try {
                 const { sessionId, startedAtMs: s } = JSON.parse(saved);
-                if (sessionId && s) { currentSessionId = sessionId; startedAtMs = s; setStatusRunning(); startTick(); }
-            } catch(_) { /* ignore */ }
+                if (sessionId && s) {
+                    currentSessionId = sessionId;
+                    startedAtMs = s;
+                    setStatusRunning(); // 상태 "입금 중"으로 변경
+                    startTick();        // 타이머 시작
+                }
+            } catch(_) { /* 파싱 실패시 무시 */ }
         }
+
+        // 차트 단위 초기값 설정
         window.__chartUnit = (typeof chartUnitSel !== 'undefined' && chartUnitSel) ? chartUnitSel.value : 'auto';
+
+        // 요약/합계/목표 데이터 불러오기
         fetchTodaySummary();
         fetchThisWeekTotal();
         fetchThisMonthTotal();
         fetchGoalProgress(goalViewPeriod.value || 'daily');
 
-        // 첫 렌더: 세션 막대
+        // 첫 화면에서 세션별 막대 그래프 렌더링
         renderSessionBars();
     })();
 </script>
