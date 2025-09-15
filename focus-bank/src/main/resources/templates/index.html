@@ -82,12 +82,6 @@
         </div>
     </div>
 
-    <!-- ==== 탭 메뉴 ==== -->
-    <div class="tabs">
-        <div id="tab-dashboard" class="tab">대시보드</div> <!-- 메인 화면 -->
-        <div id="tab-reports" class="tab">리포트</div>   <!-- 리포트 화면 -->
-    </div>
-
     <!-- [뷰1] 대시보드 화면 -->
     <section id="view-dashboard">
         <div class="grid">
@@ -104,7 +98,6 @@
                 <div class="btns">
                     <button id="btnDeposit" class="btn-deposit">입금하기</button> <!-- 집중 시작 -->
                     <button id="btnSettle" class="btn-settle" disabled>정산하기</button> <!-- 집중 종료 -->
-                    <button class="pill" id="btnGoReports">리포트 보기</button> <!-- 리포트 화면으로 이동 -->
                 </div>
                 <div class="hero">💡 <span>입금은 집중 시작, 정산은 종료를 의미해요.</span></div>
             </div>
@@ -161,48 +154,6 @@
                 <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px; position:relative;">
                     <canvas id="sessionBarCanvas"></canvas> <!-- 막대 그래프 -->
                     <div id="sessionBarEmpty" class="muted" style="display:none;margin-top:6px;">오늘 세션이 아직 없어요.</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- [뷰2] 리포트 화면 -->
-    <section id="view-reports" hidden>
-        <div class="grid">
-            <div class="card" style="grid-column:1 / -1">
-                <h2 class="section-title" style="display:flex;align-items:center;gap:8px;">
-                    주간/월간 집중 리포트
-                    <span class="muted" style="margin-left:auto;">표시 단위</span>
-                    <!-- 차트 표시 단위 선택 -->
-                    <select id="chartUnit" class="pill">
-                        <option value="auto" selected>자동</option>
-                        <option value="minutes">분</option>
-                        <option value="hours">시간(소수)</option>
-                    </select>
-                </h2>
-                <!-- 주간/월간 버튼 -->
-                <div class="btns" style="margin-bottom:8px;">
-                    <button class="pill" id="btnWeekly" data-mode="weekly">주간</button>
-                    <button class="pill" id="btnMonthly" data-mode="monthly">월간</button>
-                </div>
-                <!-- 리포트 차트 -->
-                <div style="border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:12px; position:relative;">
-                    <canvas id="reportChart"></canvas>
-                    <div id="reportError" class="muted" style="display:none;margin-top:8px;"></div> <!-- 오류 표시 -->
-                    <div class="muted" id="rangeLabel" style="margin-top:6px;"></div> <!-- 기간 라벨 -->
-                </div>
-                <!-- KPI 카드 (총합, 평균) -->
-                <div class="grid" style="margin-top:16px;">
-                    <div class="card">
-                        <div>총 집중시간</div>
-                        <div class="balance" id="kpiTotal">--:--:--</div>
-                        <div class="muted">선택된 기간 합계</div>
-                    </div>
-                    <div class="card">
-                        <div>일당 평균</div>
-                        <div class="balance" id="kpiAvg">0초</div>
-                        <div class="muted">해당 기간 일평균</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -278,18 +229,6 @@
     const goalBar        = document.getElementById('goalBar');
     const goalDesc       = document.getElementById('goalDesc');
 
-    const tabDashboard = document.getElementById('tab-dashboard');
-    const tabReports   = document.getElementById('tab-reports');
-    const btnGoReports = document.getElementById('btnGoReports');
-    const btnWeekly    = document.getElementById('btnWeekly');
-    const btnMonthly   = document.getElementById('btnMonthly');
-    const reportCanvas = document.getElementById('reportChart');
-    const kpiTotal     = document.getElementById('kpiTotal');
-    const kpiAvg       = document.getElementById('kpiAvg');
-    const rangeLabel   = document.getElementById('rangeLabel');
-    const reportError  = document.getElementById('reportError');
-    const chartUnitSel = document.getElementById('chartUnit');
-
     const goalModal   = document.getElementById('goalModal');
     const btnOpenGoal = document.getElementById('btnOpenGoal');
     const btnCloseGoal= document.getElementById('btnCloseGoal');
@@ -307,195 +246,7 @@
     // 사용자 ID 마스킹해서 화면에 표시 (ex: anon-AB12)
     anonDisplay.textContent = maskAnon(anonId);
 
-    /* ========= 라우팅 (탭 전환) ========= */
-    // 버튼 클릭 → 특정 hash로 이동
-    btnGoReports.addEventListener('click', () => navigate('#/reports'));
-
-    // 각 화면에 대응하는 함수 정의
-    const routes = {
-        '#/dashboard': () => { // 대시보드 화면 표시
-            setActiveTab('dashboard');
-            showView('view-dashboard');
-        },
-        '#/reports': async () => { // 리포트 화면 표시
-            setActiveTab('reports');
-            showView('view-reports');
-            if (!window.__chartLoaded) { // 차트 라이브러리 최초 로드
-                await loadChartJs();
-                window.__chartLoaded = true;
-            }
-            if (!window.__reportMode) window.__reportMode = 'weekly'; // 기본 모드: 주간
-            if (!window.__chartUnit)  window.__chartUnit  = chartUnitSel.value || 'auto'; // 단위 기본값
-            await renderReport(window.__reportMode); // 차트 렌더링
-        }
-    };
-
-    // 해시 변경 시 해당 화면으로 이동
-    function navigate(hash){
-        if (location.hash === hash) routes[hash]?.();
-        else location.hash = hash;
-    }
-
-    // 탭 활성화 표시
-    function setActiveTab(name){
-        tabDashboard.classList.toggle('active', name === 'dashboard');
-        tabReports.classList.toggle('active', name === 'reports');
-    }
-
-    // 화면 전환 (대시보드/리포트 show/hide)
-    function showView(id){
-        document.getElementById('view-dashboard').hidden = id !== 'view-dashboard';
-        document.getElementById('view-reports').hidden   = id !== 'view-reports';
-    }
-
-    // 라우터 실행 (현재 hash 기반으로)
-    function router(){
-        const hash = location.hash || '#/dashboard';
-        (routes[hash] || routes['#/dashboard'])();
-    }
-
-    // 이벤트 연결: 해시 변경 / 페이지 로드 시 라우터 실행
-    window.addEventListener('hashchange', router);
-    window.addEventListener('load', router);
-
-    // 탭 클릭 이벤트 → 해시 변경
-    tabDashboard.addEventListener('click', () => navigate('#/dashboard'));
-    tabReports  .addEventListener('click', () => navigate('#/reports'));
-
-    /* ========= 리포트/차트 ========= */
-    // Chart.js 라이브러리 동적 로딩 (CDN에서 불러옴)
-    async function loadChartJs(){
-        await import('https://cdn.jsdelivr.net/npm/chart.js');
-    }
-
-    // 주간 버튼 클릭 시 → 주간 모드로 리포트 렌더링
-    btnWeekly.addEventListener('click', () => {
-        window.__reportMode = 'weekly';
-        renderReport('weekly');
-    });
-
-    // 월간 버튼 클릭 시 → 월간 모드로 리포트 렌더링
-    btnMonthly.addEventListener('click', () => {
-        window.__reportMode = 'monthly';
-        renderReport('monthly');
-    });
-
-    // 단위 선택 변경 시 (자동/분/시간) → 리렌더링
-    chartUnitSel?.addEventListener('change', () => {
-        window.__chartUnit = chartUnitSel.value;
-        renderReport(window.__reportMode);
-    });
-
-    // 차트 객체 저장용 전역 변수
-    let reportChart;
-
-    // 리포트 렌더링 (주간/월간)
-    async function renderReport(mode){
-        const box = reportCanvas.parentElement;
-
-        // 차트 자리에 스켈레톤(로딩 애니메이션) 넣기
-        const placeholder = document.createElement('div');
-        placeholder.className='skeleton';
-        placeholder.style.height='360px';
-        placeholder.style.borderRadius='12px';
-        box.insertBefore(placeholder, reportCanvas);
-
-        try{
-            // API 호출 URL 선택 (주간 or 월간)
-            const url = mode === 'weekly'
-                ? `/api/reports/weekly?weeks=12`   // 최근 12주
-                : `/api/reports/monthly?months=12`; // 최근 12개월
-
-            // 서버에서 데이터 요청 (헤더에 anonId 포함)
-            const res = await fetch(url, { headers: { 'X-ANON-ID': anonId } });
-            if (!res.ok) throw new Error('리포트 로딩 실패');
-            const data = await res.json();
-
-            // 데이터에서 x축 라벨(기간) / y축 값(초) 추출
-            const labels  = data.map(d => d.period);
-            const totalsS = data.map(d => (d.totalSeconds || 0));
-
-            // 표시 단위 결정 (분 or 시간)
-            const userUnit = window.__chartUnit || 'auto';
-            const maxMinutes = Math.max(0, ...totalsS.map(s => Math.round(s/60))); // 최댓값 분 단위
-            let unit = userUnit;
-            if (userUnit === 'auto') {
-                // 주간: 120분 미만이면 '분', 아니면 '시간'
-                // 월간: 무조건 '시간'
-                unit = (mode === 'weekly') ? (maxMinutes < 120 ? 'minutes' : 'hours') : 'hours';
-            }
-            window.__effectiveUnit = unit;
-
-            // y축 값 변환 (분 단위 or 시간 단위)
-            const series = unit === 'minutes'
-                ? totalsS.map(s => Math.round(s/60))        // 분
-                : totalsS.map(s => Number((s/3600).toFixed(1))); // 시간 (소수점 1자리)
-
-            // KPI(총합, 평균) 계산
-            const totalSec = totalsS.reduce((a,b)=> a + b, 0);
-            const avgSec   = data.length
-                ? Math.round(data.reduce((a,b)=> a + (b.avgSecPerDay || 0), 0) / data.length)
-                : 0;
-
-            // KPI 표시 업데이트
-            kpiTotal.textContent = secToHMS(totalSec); // 총합
-            kpiAvg.textContent   = (avgSec < 3600)
-                ? `${Math.round(avgSec/60)}분`         // 1시간 미만 → 분 단위
-                : `${(avgSec/3600).toFixed(1)}시간`;   // 1시간 이상 → 시간 단위
-            rangeLabel.textContent = mode === 'weekly' ? '최근 12주' : '최근 12개월';
-
-            // 기존 차트가 있으면 제거 후 다시 그림
-            if (reportChart) reportChart.destroy();
-            const ctx = reportCanvas.getContext('2d');
-            reportChart = new Chart(ctx, {
-                type: 'line', // 꺾은선 그래프
-                data: {
-                    labels, // x축 라벨 (기간)
-                    datasets: [{
-                        label: mode === 'weekly'
-                            ? (unit==='minutes' ? '주간 총 집중(분)' : '주간 총 집중(시간)')
-                            : (unit==='minutes' ? '월간 총 집중(분)' : '월간 총 집중(시간)'),
-                        data: series
-                    }]
-                },
-                options: {
-                    responsive:true, // 반응형
-                    maintainAspectRatio:false,
-                    scales:{
-                        y:{
-                            beginAtZero:true, // 0부터 시작
-                            ticks:{
-                                // y축 라벨 포맷 (분/시간)
-                                callback:(v)=> unit==='minutes' ? formatMinutesTick(v) : `${v}h`
-                            }
-                        }
-                    },
-                    plugins:{
-                        tooltip:{
-                            callbacks:{
-                                // 툴팁 포맷팅 (분/시간 변환)
-                                label:(ctx)=> {
-                                    const v = ctx.parsed.y;
-                                    if (unit === 'minutes') return formatMinutesTick(v);
-                                    const totalMin = Math.round((Number(v)||0) * 60);
-                                    return formatMinutesTick(totalMin);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            reportCanvas.parentElement.style.height = '360px';
-            reportError.style.display = 'none'; // 에러 숨김
-        } catch(e){
-            // 에러 발생 시 에러 메시지 표시 + 재시도 버튼
-            reportError.style.display = 'block';
-            reportError.innerHTML = `리포트를 불러오지 못했어요. <button class="pill" onclick="renderReport('${mode}')">재시도</button>`;
-        } finally {
-            // 로딩 스켈레톤 제거
-            placeholder.remove();
-        }
-    }
+    /* ========= 세션별 막대 차트 ========= */
 
     // y축 눈금 포맷터 (분 → "시간 분" 형태로 변환)
     function formatMinutesTick(v){
@@ -1025,6 +776,11 @@
         setTimeout(()=>toastEl.classList.remove('show'), 2200);
     }
 
+    // Chart.js 라이브러리 동적 로딩 (CDN에서 import)
+    async function loadChartJs(){
+        await import('https://cdn.jsdelivr.net/npm/chart.js');
+    }
+
     // 익명 ID 마스킹 (뒤 4자리만 표시)
     function maskAnon(id){
         if(!id) return 'anon-****';
@@ -1087,9 +843,6 @@
                 }
             } catch(_) { /* 파싱 실패시 무시 */ }
         }
-
-        // 차트 단위 초기값 설정
-        window.__chartUnit = (typeof chartUnitSel !== 'undefined' && chartUnitSel) ? chartUnitSel.value : 'auto';
 
         // 요약/합계/목표 데이터 불러오기
         fetchTodaySummary();

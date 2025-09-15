@@ -11,3 +11,4 @@ public class FocusAggDto {
     private long dayCount;          // 해당 기간에 기록이 있는 일수
     private long avgSecPerDay;      // 일당 평균(초)
 }
+

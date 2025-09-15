@@ -19,7 +19,7 @@
         ORDER BY started_at ASC
     </select>
 
-    <!-- 열린 세션 조회 (기존 유지) -->
+    <!-- 열린 세션 조회 -->
     <select id="findOpenByAnon" parameterType="string" resultType="FocusSessionDto">
         SELECT
             session_id,
