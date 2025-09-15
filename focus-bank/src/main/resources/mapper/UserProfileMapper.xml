@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pyj.focusbank.dao.UserProfileMapper">
+
+    <!-- 공통: DB 컬럼 ↔ DTO 매핑 -->
+    <resultMap id="ProfileResult" type="ProfileDto">
+        <result property="anonId"    column="anon_id"/>
+        <result property="nickname"  column="nickname"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- anonId로 1명 찾기 -->
+    <select id="findByAnonId" resultMap="ProfileResult">
+        SELECT anon_id, nickname, created_at, updated_at
+          FROM user_profile
+         WHERE anon_id = #{anonId}
+    </select>
+
+    <!-- 닉네임으로 1명 찾기 (중복 체크 용도) -->
+    <select id="findByNickname" resultMap="ProfileResult">
+        SELECT anon_id, nickname, created_at, updated_at
+          FROM user_profile
+         WHERE nickname = #{nickname}
+    </select>
+
+    <!-- 신규 생성 -->
+    <insert id="insert">
+        INSERT INTO user_profile(anon_id, nickname)
+        VALUES(#{anonId}, #{nickname})
+    </insert>
+
+    <!-- 기존 사용자의 닉네임만 수정 -->
+    <update id="updateNickname">
+        UPDATE user_profile
+           SET nickname = #{nickname}
+         WHERE anon_id = #{anonId}
+    </update>
+
+</mapper>
