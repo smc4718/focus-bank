@@ -9,12 +9,25 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class SessionServiceImpl implements SessionService {
 
     private final SessionMapper sessionMapper;
+
+
+    /**
+     * 진행 중인 세션 조회.
+     *
+     * @param anonId 익명 사용자 ID
+     * @return 진행 중인 세션 Optional
+     */
+    @Override
+    public Optional<FocusSessionDto> getActiveSession(String anonId) {
+        return Optional.ofNullable(sessionMapper.findActiveSession(anonId));
+    }
 
     /**
      * 특정 날짜의 세션 목록 조회

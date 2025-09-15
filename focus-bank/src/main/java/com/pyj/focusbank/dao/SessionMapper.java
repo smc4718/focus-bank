@@ -11,6 +11,14 @@ import java.util.List;
 public interface SessionMapper {
 
     /**
+     * 특정 사용자(anonId)의 진행 중인 세션 1개 조회.
+     *
+     * @param anonId 익명 사용자 ID
+     * @return FocusSessionDto (없으면 null)
+     */
+    FocusSessionDto findActiveSession(@Param("anonId") String anonId);
+
+    /**
      * 특정 날짜의 세션 목록 조회
      * @param anonId 익명 사용자 ID
      * @param date 조회할 날짜 (yyyy-MM-dd)

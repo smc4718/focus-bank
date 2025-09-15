@@ -1,5 +1,6 @@
 package com.pyj.focusbank.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -7,6 +8,8 @@ import java.time.LocalDateTime;
 public class FocusSessionDto {
     private Long sessionId;             // 고유 ID
     private String anonId;              // 어떤 사용자의 세션인지
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime startedAt;    // 세션 시작 시간 (입금 시작)
     private LocalDateTime endedAt;      // 세션 종료 시간 (출금 완료)
     private Integer durationSec;        // 집중 시간(초) = 종료 시 계산

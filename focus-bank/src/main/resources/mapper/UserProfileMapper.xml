@@ -5,39 +5,48 @@
 
 <mapper namespace="com.pyj.focusbank.dao.UserProfileMapper">
 
-    <!-- 공통: DB 컬럼 ↔ DTO 매핑 -->
     <resultMap id="ProfileResult" type="ProfileDto">
-        <result property="anonId"    column="anon_id"/>
-        <result property="nickname"  column="nickname"/>
-        <result property="createdAt" column="created_at"/>
-        <result property="updatedAt" column="updated_at"/>
+        <result property="anonId"      column="anon_id"/>
+        <result property="nickname"    column="nickname"/>
+        <result property="nicknameTag" column="nickname_tag"/>
+        <result property="createdAt"   column="created_at"/>
+        <result property="updatedAt"   column="updated_at"/>
     </resultMap>
 
-    <!-- anonId로 1명 찾기 -->
+    <!-- anonId로 찾기 -->
     <select id="findByAnonId" resultMap="ProfileResult">
-        SELECT anon_id, nickname, created_at, updated_at
-          FROM user_profile
+        SELECT anon_id, nickname, nickname_tag, created_at, updated_at
+          FROM anonymous_user
          WHERE anon_id = #{anonId}
     </select>
 
-    <!-- 닉네임으로 1명 찾기 (중복 체크 용도) -->
+    <!-- 닉네임 단독으로 찾기 (중복 체크용) -->
     <select id="findByNickname" resultMap="ProfileResult">
-        SELECT anon_id, nickname, created_at, updated_at
-          FROM user_profile
+        SELECT anon_id, nickname, nickname_tag, created_at, updated_at
+          FROM anonymous_user
          WHERE nickname = #{nickname}
+    </select>
+
+    <!-- 닉네임+태그로 찾기 -->
+    <select id="findByNicknameAndTag" resultMap="ProfileResult">
+        SELECT anon_id, nickname, nickname_tag, created_at, updated_at
+          FROM anonymous_user
+         WHERE nickname = #{nickname}
+           AND nickname_tag = #{nicknameTag}
     </select>
 
     <!-- 신규 생성 -->
     <insert id="insert">
-        INSERT INTO user_profile(anon_id, nickname)
-        VALUES(#{anonId}, #{nickname})
+        INSERT INTO anonymous_user(anon_id, nickname, nickname_tag)
+        VALUES(#{anonId}, #{nickname}, #{nicknameTag})
     </insert>
 
-    <!-- 기존 사용자의 닉네임만 수정 -->
+    <!-- 닉네임만 수정 (태그는 변경 불가) -->
     <update id="updateNickname">
-        UPDATE user_profile
-           SET nickname = #{nickname}
-         WHERE anon_id = #{anonId}
+        UPDATE anonymous_user
+           SET nickname   = #{nickname},
+               updated_at = CURRENT_TIMESTAMP
+         WHERE anon_id   = #{anonId}
     </update>
 
 </mapper>

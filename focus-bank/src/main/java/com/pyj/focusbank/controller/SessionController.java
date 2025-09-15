@@ -23,6 +23,30 @@ public class SessionController {
 
     private final SessionService sessionService;
 
+
+    /**
+     * 현재 진행 중인 세션 조회 API.
+     *
+     * <p>조건:
+     * - 헤더 X-ANON-ID 로 사용자 식별
+     * - 해당 anonId 로 아직 종료되지 않은 세션을 조회</p>
+     *
+     * 응답:
+     * - 200 OK + FocusSessionDto (진행 중인 세션 존재)
+     * - 204 No Content (진행 중인 세션 없음)
+     *
+     * @param anonId 요청 헤더의 익명 사용자 ID
+     * @return 진행 중 세션 ResponseEntity
+     */
+    @GetMapping("/active")
+    public ResponseEntity<FocusSessionDto> getActiveSession(
+            @RequestHeader("X-ANON-ID") String anonId
+    ) {
+        return sessionService.getActiveSession(anonId)
+                .map(ResponseEntity::ok)          // 세션 있으면 200 OK
+                .orElseGet(() -> ResponseEntity.noContent().build()); // 없으면 204
+    }
+
     /**
      * 특정 날짜의 세션 목록 조회
      * @param anonId 익명 사용자 ID (헤더)

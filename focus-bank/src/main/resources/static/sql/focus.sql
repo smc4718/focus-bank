@@ -1,17 +1,23 @@
--- 익명 사용자focusbank
+-- DROP
+DROP TABLE IF EXISTS user_goal;
+DROP TABLE IF EXISTS daily_aggregate;
+DROP TABLE IF EXISTS focus_session;
 DROP TABLE IF EXISTS anonymous_user;
+
+-- 익명 사용자focusbank
 CREATE TABLE anonymous_user (
   anon_id      CHAR(26)    NOT NULL,           					   -- 익명 사용자 식별자 (ULID 26자리)
   created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성 시각
-  nickname     VARCHAR(24)     NULL,             					-- 닉네임
-  nickname_tag CHAR(4) 		    NULL,   								-- 닉네임 충돌 방지용 태그 (#1234)
+  updated_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 최종 수정 시각
+                                ON UPDATE CURRENT_TIMESTAMP,
+  nickname     VARCHAR(24)     NULL,             				-- 닉네임
+  nickname_tag CHAR(4) 		    NULL DEFAULT NULL,								-- 닉네임 충돌 방지용 태그 (#1234)
   PRIMARY KEY (anon_id),
   UNIQUE KEY uq_nickname (nickname, nickname_tag) 					-- 닉네임+태그 조합 유니크
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 
 -- 집중 세션(입금/출금)
-DROP TABLE IF EXISTS focus_session;
 CREATE TABLE focus_session (
   session_id 	BIGINT 	NOT NULL AUTO_INCREMENT, 				-- 세션 고유 ID
   anon_id      CHAR(26) NOT NULL,                 				-- 어떤 사용자의 세션인지(FK)
@@ -29,7 +35,6 @@ CREATE TABLE focus_session (
 
 
 -- 일별 집계
-DROP TABLE IF EXISTS daily_aggregate;
 CREATE TABLE daily_aggregate (
   target_date 	 DATE 	 NOT NULL,              				-- 집계 대상 날짜
   anon_id 		 CHAR(26) NOT NULL,              				-- 사용자 ID (FK)
@@ -46,7 +51,6 @@ CREATE TABLE daily_aggregate (
 
 -- 사용자 목표 테이블 (목표 진행률 기능용)
 -- 목표가 아직 없다면 이 테이블은 비어 있어도 OK (조회 시 "미설정"으로 응답됨)
-DROP TABLE IF EXISTS user_goal;
 CREATE TABLE user_goal (
   goal_id         BIGINT   AUTO_INCREMENT PRIMARY KEY, -- 목표 고유 ID
   anon_id         CHAR(26) 									NOT NULL, -- 익명 사용자 ULID (FK)

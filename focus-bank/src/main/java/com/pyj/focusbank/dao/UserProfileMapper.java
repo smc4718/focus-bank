@@ -25,16 +25,23 @@ public interface UserProfileMapper {
     /**
      * 새 프로필 생성.
      * @param anonId 익명 식별자(필수)
-     * @param nickname 닉네임(nullable 가능: 정책에 따라 null 허용 여부 결정)
+     * @param nickname 닉네임
+     * @param nicknameTag 자동 생성된 태그 (예: "0042")
      * @return 삽입된 행 수(정상 1)
      */
-    int insert(@Param("anonId") String anonId, @Param("nickname") String nickname);
+    int insert(@Param("anonId") String anonId,
+               @Param("nickname") String nickname,
+               @Param("nicknameTag") String nicknameTag);
+
 
     /**
      * 기존 사용자의 닉네임만 수정.
+     * 태그는 시스템이 자동 부여하므로 변경 불가.
+     *
      * @param anonId 대상 사용자 anonId
      * @param nickname 새 닉네임
-     * @return 변경된 행 수(정상 1, 없으면 0)
+     * @return 변경된 행 수 (정상 1, 없으면 0)
      */
     int updateNickname(@Param("anonId") String anonId, @Param("nickname") String nickname);
+
 }

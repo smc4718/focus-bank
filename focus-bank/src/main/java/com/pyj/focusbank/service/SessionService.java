@@ -4,8 +4,21 @@ import com.pyj.focusbank.dto.FocusSessionDto;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface SessionService {
+
+    /**
+     * 진행 중인 세션 조회.
+     *
+     * <p>조건:
+     * - 해당 사용자의 anonId
+     * - 아직 종료되지 않은 세션(endedAt == null)</p>
+     *
+     * @param anonId 익명 사용자 ID
+     * @return 진행 중인 세션이 있으면 Optional.of(dto), 없으면 Optional.empty()
+     */
+    Optional<FocusSessionDto> getActiveSession(String anonId);
 
     /**
      * 특정 날짜의 세션 목록 조회

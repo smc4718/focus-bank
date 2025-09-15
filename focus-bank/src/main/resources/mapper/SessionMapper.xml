@@ -4,6 +4,22 @@
 
 <mapper namespace="com.pyj.focusbank.dao.SessionMapper">
 
+    <!-- 진행 중인 세션 1개 조회 -->
+    <select id="findActiveSession" parameterType="string" resultType="FocusSessionDto">
+        SELECT
+            session_id,
+            anon_id,
+            started_at,
+            ended_at,
+            duration_sec,
+            created_at
+          FROM focus_session
+         WHERE anon_id = #{anonId}
+           AND ended_at IS NULL
+         ORDER BY started_at DESC
+               LIMIT 1
+    </select>
+
     <!-- 특정 날짜의 세션 목록 조회 -->
     <select id="findByAnonAndDate" parameterType="map" resultType="FocusSessionDto">
         SELECT
@@ -36,9 +52,10 @@
 
     <!-- 부모 보장: 없으면 생성, 있으면 무시 -->
     <insert id="ensureAnonUser" parameterType="string">
-        INSERT INTO anonymous_user (anon_id, created_at)
-        VALUES (#{anonId}, NOW())
+        INSERT INTO anonymous_user (anon_id, created_at, nickname_tag)
+        VALUES (#{anonId}, NOW(), LPAD(FLOOR(RAND()*9999)+1,4,'0'))
             ON DUPLICATE KEY UPDATE created_at = created_at
+
     </insert>
 
     <!-- 집중 시작 : 안전 INSERT, 부모가 있을 때만 들어감 (FK 예외 예방) -->
