@@ -42,4 +42,10 @@
                                  target_seconds = VALUES(target_seconds)
     </insert>
 
+    <!-- 익명 사용자 row 보장 (이미 있으면 무시) -->
+    <insert id="ensureAnonymousUser">
+        INSERT IGNORE INTO anonymous_user (anon_id)
+        VALUES (#{anonId})
+    </insert>
+
 </mapper>

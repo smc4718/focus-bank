@@ -30,4 +30,7 @@ public interface GoalMapper {
      * - 같은 (anonId, periodType, effectiveFrom)이면 target_seconds만 갱신
      */
     int upsertGoal(UserGoalDto goal);
+
+    /** 익명 사용자 row 자동 생성 (없으면 삽입, 있으면 무시) */
+    int ensureAnonymousUser(@Param("anonId") String anonId);
 }

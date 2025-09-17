@@ -95,6 +95,9 @@ public class GoalServiceImpl implements GoalService {
                 ? today.toString()
                 : req.getEffectiveFrom().trim();
 
+        // FK 보장: 익명 사용자 row 없으면 자동 생성
+        goalMapper.ensureAnonymousUser(anonId);
+
         UserGoalDto goal = new UserGoalDto();
         goal.setAnonId(anonId);
         goal.setPeriodType(periodType);

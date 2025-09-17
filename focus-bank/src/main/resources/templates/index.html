@@ -443,40 +443,37 @@
             return;
         }
         try {
-            btnSettle.disabled = true; // 중복 클릭 방지
+            btnSettle.disabled = true;
 
-            // 서버에 POST 요청 → 해당 세션 종료
-            const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, { method: 'POST' });
+            // X-ANON-ID 헤더 추가
+            const res = await fetch(`/api/sessions/settle?sessionId=${currentSessionId}`, {
+                method: 'POST',
+                headers: { 'X-ANON-ID': anonId }
+            });
 
-            // 이미 종료된 세션일 경우 → 안내 메시지
             if (res.status === 409){
                 showToast('이미 종료된 세션입니다.', true);
                 btnSettle.disabled = false;
                 return;
             }
-
             if (!res.ok) throw new Error(await res.text());
 
-            // 종료된 세션 정보 응답
             const data = await res.json();
 
-            // UI 상태를 "대기 중"으로 변경 + 타이머 정지
+            // 세션ID가 없어지기 전에 로컬 로그에 종료 기록
+            const endedAt = Date.now();
+            logEnd(currentSessionId, endedAt);
+
+            // 타이머 먼저 멈추고 상태 전환
             stopTick();
             setStatusIdle();
 
-            // 오늘/주간/월간 합계 다시 불러오기
             await fetchTodaySummary();
             await fetchThisWeekTotal();
             await fetchThisMonthTotal();
             await fetchGoalProgress(goalViewPeriod.value || 'daily');
 
-            // 종료 알림 (세션 시간 표시)
             showToast(`정산 완료! 이번 입금: ${fmtSec(data.durationSec || 0)} ⏱️`);
-
-            // 로컬 로그에 종료 기록
-            logEnd(currentSessionId, Date.now());
-
-            // 세션 막대 차트 다시 렌더링
             await renderSessionBars();
         } catch (e) {
             showToast('정산 실패: ' + (e.message || e), true);
@@ -496,41 +493,50 @@
 
     // UI 상태를 "대기 중"으로 변경
     function setStatusIdle(){
+        stopTick();
         statusPill.textContent='대기 중';
         statusPill.style.background='rgba(255,255,255,.06)';
         statusPill.style.borderColor='rgba(255,255,255,.12)';
-        btnSettle.disabled=true;  // 정산 버튼 비활성화
-        btnDeposit.disabled=false;// 입금 버튼 활성화
-        liveTimerEl.textContent='00:00:00'; // 타이머 리셋
+        btnSettle.disabled=true;
+        btnDeposit.disabled=false;
+        liveTimerEl.textContent='00:00:00';
         currentSessionId=null;
         startedAtMs=null;
-        persistActiveSession();   // 세션 상태 저장 (없으면 초기화)
+        persistActiveSession();
     }
 
     // 실시간 타이머 시작
     function startTick(){
-        if (!startedAtMs) startedAtMs=Date.now(); // 시작 시간 기록
-        // 즉시 한 번 표시
-        liveTimerEl.textContent=fmtSec(Math.floor((Date.now()-startedAtMs)/1000));
+        // 기존 인터벌 정리
+        if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+
+        // 시작 시간이 없으면 시작하지 않음 (방어)
+        if (startedAtMs == null) return;
+
+        // 즉시 1회 표시
+        liveTimerEl.textContent = fmtSec(Math.floor((Date.now()-startedAtMs)/1000));
+
         // 1초마다 업데이트
-        tickTimer=setInterval(()=>{
-            const sec=Math.floor((Date.now()-startedAtMs)/1000);
-            liveTimerEl.textContent=fmtSec(sec);
-        },1000);
+        tickTimer = setInterval(()=>{
+            if (startedAtMs == null) { // Idle 전환 방어
+                clearInterval(tickTimer);
+                tickTimer = null;
+                return;
+            }
+            const sec = Math.floor((Date.now()-startedAtMs)/1000);
+            liveTimerEl.textContent = fmtSec(sec);
+        }, 1000);
 
-        // 세션 막대도 실시간 갱신
         startLiveUiTick();
-
-        // 상태 저장
         persistActiveSession();
     }
 
     // 실시간 타이머 정지
     function stopTick(){
-        if (tickTimer) clearInterval(tickTimer); // setInterval 해제
-        stopLiveUiTick(); // 막대 갱신도 정지
-        persistActiveSession(); // 상태 저장
+        if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+        stopLiveUiTick();
     }
+
 
     /* ========= 오늘 요약 ========= */
     // 오늘 하루 누적 집중 시간 가져오기
@@ -593,6 +599,7 @@
             const res = await fetch(`/api/goals/progress?period=${period}`, { headers: {'X-ANON-ID': anonId} });
             if(!res.ok){ setGoalUnset(); return; }
             const j = await res.json();
+            console.log("GoalProgress", period, j);  // 👈 응답 확인용 로그
             if (!j || j.targetSeconds == null){ setGoalUnset(); return; }
 
             // 진행률 계산 (progress 있으면 사용, 없으면 achieved/target 계산)
