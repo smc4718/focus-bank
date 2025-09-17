@@ -676,7 +676,6 @@
             const res = await fetch(`/api/goals/progress?period=${period}`, { headers: {'X-ANON-ID': anonId} });
             if(!res.ok){ setGoalUnset(); return; }
             const j = await res.json();
-            console.log("GoalProgress", period, j);  // 👈 응답 확인용 로그
             if (!j || j.targetSeconds == null){ setGoalUnset(); return; }
 
             // 진행률 계산 (progress 있으면 사용, 없으면 achieved/target 계산)
@@ -792,7 +791,7 @@
             tr.innerHTML = `
                 <td>${i+1}</td>
                 <td>${r.displayName || r.anonId || '익명'}</td>
-                <td>${secToHMS(r.totalSeconds || 0)}</td>
+                <td>${secToHMS(r.seconds || 0)}</td>
             `;
             targetBody.appendChild(tr);
         });
