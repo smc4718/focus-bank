@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pyj.focusbank.dao.RankingMapper">
+
+    <!-- ==========================================================
+         ResultMap 정의
+         - DB 컬럼명(snake_case) ↔ DTO 필드명(camelCase) 매핑
+         - RankingDto (anonId, nickname, nicknameTag, totalSeconds) 에 매핑
+         ========================================================== -->
+    <resultMap id="RankingResult" type="RankingDto">
+        <result property="anonId"      column="anon_id"/>
+        <result property="nickname"    column="nickname"/>
+        <result property="nicknameTag" column="nickname_tag"/>
+        <result property="totalSeconds" column="total_seconds"/>
+    </resultMap>
+
+    <!-- ==========================================================
+         주간 랭킹 조회
+         - 이번 주 월요일(monday)부터 오늘(today)까지 집계
+         - daily_aggregate 테이블 합산 후 TOP N 추출
+         - anonymous_user 와 LEFT JOIN 하여 닉네임이 없어도 결과 반환
+         ========================================================== -->
+    <select id="selectWeeklyRanking" resultMap="RankingResult">
+        SELECT
+               da.anon_id,                            -- 사용자 ID
+               u.nickname,                            -- 닉네임
+               u.nickname_tag,                        -- 닉네임 태그
+               SUM(da.total_seconds) AS total_seconds -- 이번 주 집중 시간 합계
+          FROM daily_aggregate da
+                 LEFT JOIN anonymous_user u
+                           ON da.anon_id = u.anon_id
+         WHERE da.target_date BETWEEN #{monday} AND #{today}
+         GROUP BY da.anon_id, u.nickname, u.nickname_tag
+         ORDER BY total_seconds DESC
+               LIMIT #{limit}                         -- 상위 N명 제한
+    </select>
+
+    <!-- ==========================================================
+         전체 누적 랭킹 조회
+         - daily_aggregate 전체 기간을 SUM
+         - TOP N 사용자 반환
+         ========================================================== -->
+    <select id="selectOverallRanking" resultMap="RankingResult">
+        SELECT
+               da.anon_id,                            -- 사용자 ID
+               u.nickname,                            -- 닉네임
+               u.nickname_tag,                        -- 닉네임 태그
+               SUM(da.total_seconds) AS total_seconds -- 누적 집중 시간 합계
+          FROM daily_aggregate da
+                 LEFT JOIN anonymous_user u
+                           ON da.anon_id = u.anon_id
+         GROUP BY da.anon_id, u.nickname, u.nickname_tag
+         ORDER BY total_seconds DESC
+               LIMIT #{limit}                         -- 상위 N명 제한
+    </select>
+
+</mapper>

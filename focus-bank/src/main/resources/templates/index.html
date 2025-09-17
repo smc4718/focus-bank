@@ -89,6 +89,43 @@
         /* ==== 로딩 스켈레톤 애니 ==== */
         .skeleton{background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.12),rgba(255,255,255,.06)); background-size:200% 100%; animation:s 1.2s linear infinite;}
         @keyframes s {0%{background-position:0 0}100%{background-position:-200% 0}}
+
+        /* ==== 랭킹 테이블 ==== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+        }
+        table th, table td {
+            padding: 6px 4px;
+        }
+        table tbody tr {
+            border-top: 1px solid rgba(255,255,255,.08);
+        }
+        table tbody tr:first-child {
+            border-top: none;
+        }
+        table td {
+            color: var(--txt);
+        }
+        table td:last-child {
+            text-align: right; /* 집중시간 오른쪽 정렬 */
+            font-variant-numeric: tabular-nums; /* 숫자 고정폭 */
+        }
+
+        /* 1~3등 강조 색상 */
+        #weeklyRanking tbody tr:nth-child(1) td:first-child,
+        #overallRanking tbody tr:nth-child(1) td:first-child {
+            color: gold; font-weight: bold;
+        }
+        #weeklyRanking tbody tr:nth-child(2) td:first-child,
+        #overallRanking tbody tr:nth-child(2) td:first-child {
+            color: silver; font-weight: bold;
+        }
+        #weeklyRanking tbody tr:nth-child(3) td:first-child,
+        #overallRanking tbody tr:nth-child(3) td:first-child {
+            color: #cd7f32; font-weight: bold; /* 동메달 */
+        }
     </style>
 </head>
 <body>
@@ -221,6 +258,43 @@
                     <!-- 세션 없을 때 보여줄 안내 -->
                     <div id="sessionBarEmpty" class="muted" style="display:none;margin-top:6px;">오늘 세션이 아직 없어요.</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ===== 랭킹 카드 영역 ===== -->
+        <div class="grid">
+            <!-- 이번 주 랭킹 -->
+            <div class="card">
+                <h2 class="section-title">이번 주 랭킹 🏆</h2>
+                <table id="weeklyRanking" style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                    <tr style="color:var(--muted);">
+                        <th style="text-align:left;">순위</th>
+                        <th style="text-align:left;">사용자</th>
+                        <th style="text-align:right;">집중시간</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- JS로 데이터 주입 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 누적 랭킹 -->
+            <div class="card">
+                <h2 class="section-title">누적 랭킹 🏦</h2>
+                <table id="overallRanking" style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                    <tr style="color:var(--muted);">
+                        <th style="text-align:left;">순위</th>
+                        <th style="text-align:left;">사용자</th>
+                        <th style="text-align:right;">집중시간</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- JS로 데이터 주입 -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
@@ -363,7 +437,7 @@
     const goalViewPeriod = document.getElementById('goalViewPeriod');
 
     // 닉네임 관련 DOM
-    const displayName    = document.getElementById('displayName');
+    const displayNameEl  = document.getElementById('displayName');
     const btnOpenNickname= document.getElementById('btnOpenNickname');
     const btnCloseNickname=document.getElementById('btnCloseNickname');
     const btnSaveNick    = document.getElementById('btnSaveNick');
@@ -372,6 +446,9 @@
     const nickCheckMsg   = document.getElementById('nickCheckMsg');
     const nicknameModal  = document.getElementById('nicknameModal');
 
+    // 랭킹 관련 DOM
+    const weeklyRankingBody  = document.querySelector('#weeklyRanking tbody');
+    const overallRankingBody = document.querySelector('#overallRanking tbody');
 
     // 세션별 막대 그래프 관련 DOM
     const sessionBarCanvas = document.getElementById('sessionBarCanvas');
@@ -688,6 +765,37 @@
     function closeGoalModal(){
         goalModal.classList.remove('show-flex');
         goalModal.setAttribute('aria-hidden','true');
+    }
+
+    /* ========= 랭킹 ========= */
+    async function fetchRanking(period, targetBody){
+        try {
+            const res = await fetch(`/api/rankings/${period}`, {
+                headers: { 'X-ANON-ID': anonId }
+            });
+            const arr = res.ok ? await res.json() : [];
+            renderRanking(arr, targetBody);
+        } catch(e) {
+            console.error("랭킹 불러오기 실패", e);
+            targetBody.innerHTML = `<tr><td colspan="3" class="muted">불러오기 실패</td></tr>`;
+        }
+    }
+
+    function renderRanking(arr, targetBody){
+        targetBody.innerHTML = "";
+        if (!arr || !arr.length){
+            targetBody.innerHTML = `<tr><td colspan="3" class="muted">데이터 없음</td></tr>`;
+            return;
+        }
+        arr.forEach((r,i)=>{
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${i+1}</td>
+                <td>${r.displayName || r.anonId || '익명'}</td>
+                <td>${secToHMS(r.totalSeconds || 0)}</td>
+            `;
+            targetBody.appendChild(tr);
+        });
     }
 
     /* ========= 더블클릭 방지 ========= */
@@ -1074,8 +1182,8 @@
             const j = await res.json();
 
             // 닉네임 업데이트
-            displayName.textContent = `${j.nickname}#${j.nicknameTag}`;
-            displayName.classList.add('display-pill');
+            displayNameEl.textContent = `${j.nickname}#${j.nicknameTag}`;
+            displayNameEl.classList.add('display-pill');
 
             // 닉네임이 있으면 식별자 숨김
             document.getElementById('anonRow').style.display = 'none';
@@ -1094,14 +1202,14 @@
                 const j=await res.json();
                 if(j.nickname && j.nicknameTag){
                     // 닉네임 표시
-                    displayName.textContent=`${j.nickname}#${j.nicknameTag}`;
-                    displayName.classList.add('display-pill');
+                    displayNameEl.textContent = `${j.nickname}#${j.nicknameTag}`;
+                    displayNameEl.classList.add('display-pill');
                     // 식별자 숨김
                     document.getElementById('anonRow').style.display = 'none';
                 } else {
                     // 닉네임 없으면 기본값 + 식별자 표시
-                    displayName.textContent='닉네임 미설정';
-                    displayName.classList.remove('display-pill');
+                    displayNameEl.textContent = '닉네임 미설정';
+                    displayNameEl.classList.remove('display-pill');
                     document.getElementById('anonRow').style.display = '';
                 }
             }
@@ -1149,6 +1257,9 @@
         // 서버와 로컬 세션 상태 동기화
         syncActiveSession();
 
+        // 닉네임 프로필 불러오기 호출
+        fetchProfile();
+
         // 요약/합계/목표 데이터 불러오기
         fetchTodaySummary();
         fetchThisWeekTotal();
@@ -1158,8 +1269,9 @@
         // 첫 화면에서 세션별 막대 그래프 렌더링
         renderSessionBars();
 
-        // 닉네임 프로필 불러오기 호출
-        fetchProfile();
+        // 랭킹 불러오기
+        fetchRanking('weekly', weeklyRankingBody);
+        fetchRanking('overall', overallRankingBody);
     })();
 </script>
 </body>
