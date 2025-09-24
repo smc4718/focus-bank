@@ -26,10 +26,10 @@
 
 ## 🧱 기술 스택
 - **Backend**: Java 17, Spring Boot 3.5.5, MyBatis 3.0.3
-- **DB**: MariaDB
+- **DB**: MariaDB (HeidiSQL)
 - **Frontend**: HTML5, CSS3, Vanilla JS (Chart.js로 시각화, QRCode.js로 세션 연동 QR 생성)
 - **Build**: Gradle
-- **기타**: Lombok, HikariCP
+- **기타**: Lombok, HikariCP, IntelliJ
 
 ---
 
