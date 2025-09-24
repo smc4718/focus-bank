@@ -263,6 +263,16 @@
         }
         .btn-deposit:disabled,.btn-settle:disabled{opacity:.5;cursor:not-allowed}
 
+        .icon-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            box-shadow: none;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+        }
+
         /* ==== 데이터 강조 ==== */
         .balance{font-size:28px;font-weight:800;color:#fff;text-shadow:0 0 8px rgba(34,197,94,.7)}
         .muted{color:var(--muted);font-size:13px}
@@ -330,9 +340,10 @@
 
                     <div class="row">
                         <div class="row-left"><div>표시명</div></div>
-                        <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button id="btnShowQr" class="icon-btn" title="세션 공유">📤</button>
                             <span id="displayName" class="pill display-pill">닉네임 미설정</span>
-                            <button id="btnOpenNickname" class="btn-ghost" style="margin-left:8px">변경</button>
+                            <button id="btnOpenNickname" class="btn-ghost">변경</button>
                         </div>
                     </div>
 
@@ -523,6 +534,37 @@
     </div>
 </div>
 
+<!-- QR 코드 모달 -->
+<div id="qrModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+        <h3>QR 스캔</h3>
+
+        <div style="display:flex; align-items:flex-start; gap:20px; padding:16px;">
+            <!-- QR 코드 영역 -->
+            <div id="qrCode"></div>
+
+            <!-- 설명 텍스트 -->
+            <div style="width:180px; font-size:14px; line-height:1.6;" class="muted">
+                <p style="margin:0;">
+                    📲 <b>세션 이어쓰기</b><br/><br/>
+                    다른 기기에서<br/>
+                    QR 코드를 스캔하면<br/><br/>
+                    <b>집중 세션</b>을<br/>
+                    이어갈 수 있어요.
+                </p>
+                <p style="margin-top:12px;">
+                    ＊<b>익명 ID</b>로 연결됨
+                </p>
+            </div>
+        </div>
+
+        <!-- 닫기 버튼 -->
+        <div class="actions">
+            <button id="btnCloseQr" class="btn-ghost">닫기</button>
+        </div>
+    </div>
+</div>
+
 <script>
     /* ========= 익명 ID ========= */
     // 처음 방문 시 로컬스토리지에 익명 사용자 ID(anonId)가 없으면 생성
@@ -581,6 +623,12 @@
 
     // 사용자 ID 마스킹해서 화면에 표시 (ex: anon-AB12)
     anonDisplay.textContent = maskAnon(anonId);
+
+    // QR 공유 버튼 이벤트
+    const btnShowQr = document.getElementById('btnShowQr');
+    const qrModal   = document.getElementById('qrModal');
+    const btnCloseQr= document.getElementById('btnCloseQr');
+    const qrCodeEl  = document.getElementById('qrCode');
 
     /* ========= 세션별 막대 차트 ========= */
 
@@ -1340,6 +1388,21 @@
         }catch(_){ }
     }
 
+    btnShowQr.addEventListener('click', ()=>{
+        // 공유할 URL (anonId 포함)
+        const url = `${location.origin}/continue?anon=${anonId}`;
+        qrCodeEl.innerHTML = ""; // 초기화
+        new QRCode(qrCodeEl, { text: url, width: 200, height: 200 });
+        qrModal.classList.add('show-flex');
+        qrModal.setAttribute('aria-hidden','false');
+    });
+
+    btnCloseQr.addEventListener('click', ()=>{
+        qrModal.classList.remove('show-flex');
+        qrModal.setAttribute('aria-hidden','true');
+        qrCodeEl.innerHTML = ""; // 닫을 때도 초기화
+    });
+
     /* ========= 서버와 로컬 세션 동기화 ========= */
     async function syncActiveSession(){
         // 1) 로컬스토리지 값 우선 적용 (임시 상태)
@@ -1398,5 +1461,9 @@
         fetchRanking('overall', overallRankingBody);
     })();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
+
 </body>
 </html>
