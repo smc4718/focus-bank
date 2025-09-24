@@ -1,8 +1,7 @@
 # Focus Bank — 디지털 집중력 은행
 
-집중 시간을 **입금(시작)** / **정산(종료)** 하여 누적하고, **목표 진행률**, **일/주/월 리포트**, **랭킹**, **QR로 세션 연동**을 제공하는 웹 애플리케이션입니다.
-
-> 본 문서는 업로드된 저장소(`/focus-bank/focus-bank`) 기준으로 자동 생성되었습니다.
+집중 시간을 **입금(시작)** / **정산(종료)** 하여 누적하고, </br>
+**목표 진행률**, **일/주/월 리포트**, **랭킹**, **QR로 세션 연동**을 제공하는 웹 애플리케이션입니다.
 
 ---
 
@@ -26,13 +25,11 @@
 ---
 
 ## 🧱 기술 스택
-- **Backend**: Java 17, Spring Boot 3.x, MyBatis
+- **Backend**: Java 17, Spring Boot 3.5.5, MyBatis 3.0.3
 - **DB**: MariaDB
-- **Frontend**: Thymeleaf + Vanilla JS (Chart.js)
+- **Frontend**: HTML5, CSS3, Vanilla JS (Chart.js로 시각화, QRCode.js로 세션 연동 QR 생성)
 - **Build**: Gradle
 - **기타**: Lombok, HikariCP
-
-> 실제 버전은 `build.gradle`, `application.yml`에 정의되어 있습니다.
 
 ---
 
@@ -58,43 +55,6 @@ focus-bank/
 
 ---
 
-## ▶️ 실행 방법 (로컬 개발)
-
-1) **DB 준비 (MariaDB)**  
-```sql
--- 데이터베이스 생성 (예시)
-CREATE DATABASE focusbank DEFAULT CHARACTER SET utf8mb4;
-CREATE USER 'fb'@'%' IDENTIFIED BY '1735';
-GRANT ALL PRIVILEGES ON focusbank.* TO 'fb'@'%';
-FLUSH PRIVILEGES;
-```
-
-2) **스키마 생성**  
-`src/main/resources/static/sql/focus.sql`를 실행해 테이블을 생성합니다.
-
-3) **환경 설정**  
-`src/main/resources/application-dev.yml` (기본 active: `dev`)
-```yaml
-spring:
-  datasource:
-    url: jdbc:mariadb://localhost:3306/focusbank?useUnicode=true&characterEncoding=utf8
-    username: fb
-    password: 1735
-```
-> 운영 환경에서는 **환경 변수/Secret**로 계정 정보를 관리하세요.
-
-4) **애플리케이션 실행**
-```bash
-./gradlew bootRun
-# 또는
-./gradlew build && java -jar build/libs/*.jar
-```
-
-5) **접속**  
-브라우저에서 `http://localhost:8080`
-
----
-
 ## 🔐 클라이언트 식별 (X-ANON-ID)
 
 - 최초 접속 시 프론트에서 **ULID** 생성 후 `localStorage`에 저장
@@ -105,7 +65,7 @@ spring:
 
 ## 🔗 API 빠른 안내
 
-> 전체 상세는 [`docs/API.md`](./docs/API.md) 참고
+> 전체 상세는 [`docs/API_SPEC`](./docs/API_SPEC.md) 참고
 
 - `POST /api/sessions/deposit` — 세션 시작(입금)  
 - `POST /api/sessions/settle?sessionId=...` — 세션 종료(정산)  
@@ -130,7 +90,7 @@ spring:
 - 트랜잭션은 **Service** 레이어에서 관리
 - 집계 테이블(`daily_aggregate`)을 사용해 조회 성능 최적화
 
-자세한 구조/흐름도는 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) 참고.
+자세한 구조/흐름도는 [`docs/SYSTEM_ARCHITECTURE.md`](./docs/SYSTEM_ARCHITECTURE.md) 참고.
 
 ---
 
@@ -143,22 +103,13 @@ spring:
 - `daily_aggregate(anon_id, target_date, total_sec, created_at)`
 - `user_goal(goal_id, anon_id, period_type, target_seconds, effective_from, created_at)`
 
-상세 스키마/인덱스는 [`docs/DB.md`](./docs/DB.md) 참고.
-
----
-
-## ✅ 품질/보안 체크리스트
-
-- [ ] DB 계정/비밀번호 환경 변수로 분리
-- [ ] RestController 예외 처리(ProblemDetail) 표준화
-- [ ] 입력값 검증(닉네임 규칙, 목표 값 범위) 강화
-- [ ] CORS/HTTPS/Reverse Proxy 설정 (운영 시)
-- [ ] 부하테스트/지표(Actuator/Prometheus) 추가
+상세 스키마/인덱스는 [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md) 참고.
 
 ---
 
 ## 🛣️ 향후 개선 아이디어
 - Streak(연속 달성일) 표시, 더 풍부한 리포트 시각화
-- 기록 내보내기(CSV/PDF), 모바일 PWA 지원
-- 실시간 공동 랭킹/친구 초대
+- 랭킹 간 계급 뱃지
+- 기록 내보내기(CSV/PDF)
+- 친구 초대
 
