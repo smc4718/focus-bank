@@ -44,6 +44,7 @@
 | created_at     | DATETIME  |생성 시 자동 기록 (DEFAULT CURRENT_TIMESTAMP) |
 
 Unique: `(anon_id, period_type, effective_from)` <br/>
+
 -> 사용자가 같은 기간에 중복 목표를 못 넣도록 보장
 ---
 
