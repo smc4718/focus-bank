@@ -10,7 +10,7 @@
   <img src="docs/focus_media_title.png" alt="시연 영상 썸네일" width="200"/>
 </a>
 
----
+<br/>
 
 ### 프로젝트 개요
 **Focus Bank**는 내가 하루에 해야 할 일에 <br/> 
@@ -26,7 +26,7 @@
 집계된 데이터는 **일·주·월 단위**로 확인할 수 있고,  
 랭킹 시스템과 목표 관리 기능을 통해 자기 주도적인 성장을 도와줍니다.  
 
----
+<br/>
 
 ### 🎯 프로젝트 목표
 - 하루 동안 **해야 할 일에 얼마나 시간을 썼는지** 확인  
@@ -34,16 +34,25 @@
 - **랭킹 시스템**으로 비교와 동기부여 강화  
 - **목표 달성 관리**를 통해 성취감과 꾸준한 습관 형성
 
----
+<br/>
 
 ### 🎨 디자인
 - **ATM/게임기 UI 콘셉트**  
   - 카드·버튼에 네온 라인, 디지털 시계 느낌 적용  
 - **픽셀 폰트 + 산세리프 조합**  
-  - 제목은 게임풍 픽셀 폰트, 본문은 가독성 중심 산세리프  
+  - 제목은 게임풍 픽셀 폰트, 본문은 가독성 중심 산세리프
 
 ---
-## ✨ 메인 전체화면
+
+## 🧱 기술 스택
+- **Backend**: Java 17, Spring Boot 3.5.5, MyBatis 3.0.3
+- **DB**: MariaDB (HeidiSQL)
+- **Frontend**: HTML5, CSS3, Vanilla JS (Chart.js로 시각화, QRCode.js로 세션 연동 QR 생성)
+- **Build**: Gradle
+- **기타**: Lombok, HikariCP, IntelliJ
+
+---
+## ✨ 메인
 <img src="docs/main.png" alt="메인" width="500"/>
 <br/>
 <br/>
@@ -112,14 +121,6 @@
   </tr>
 </table>
 <br/> 
----
-
-## 🧱 기술 스택
-- **Backend**: Java 17, Spring Boot 3.5.5, MyBatis 3.0.3
-- **DB**: MariaDB (HeidiSQL)
-- **Frontend**: HTML5, CSS3, Vanilla JS (Chart.js로 시각화, QRCode.js로 세션 연동 QR 생성)
-- **Build**: Gradle
-- **기타**: Lombok, HikariCP, IntelliJ
 
 ---
 
