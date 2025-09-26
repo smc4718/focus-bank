@@ -46,7 +46,7 @@ focus-bank/
   │  │  │  └─ dto/               # 요청/응답 DTO
   │  │  └─ resources/
   │  │     ├─ mapper/*.xml       # MyBatis 매퍼 XML
-  │  │     ├─ templates/index.html
+  │  │     ├─ static/index.html
   │  │     ├─ application.yml / application-dev.yml
   │  │     └─ static/sql/focus.sql  # 스키마 & 인덱스
   │  └─ test/java/...
