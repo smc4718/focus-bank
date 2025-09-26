@@ -3,6 +3,15 @@
 
 ---
 
+## 🎥 시연 영상
+아래 이미지를 클릭하시면, 유튜브 링크로 연결됩니다.
+
+<a href="https://youtu.be/1hJeWfLENPI" target="_blank">
+  <img src="docs/focus_media_title.png" alt="시연 영상 썸네일" width="200"/>
+</a>
+
+---
+
 ### 프로젝트 개요
 **Focus Bank**는 내가 하루에 해야 할 일에 <br/> 
 **얼마나 시간을 투자했는지 기록하고 관리하는 웹 애플리케이션**입니다.  
