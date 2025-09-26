@@ -71,3 +71,34 @@ CREATE TABLE user_goal (
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 
+-- test 랭킹
+
+-- 더미 유저 (실제 1위 제외, 4명 추가)
+INSERT INTO anonymous_user (anon_id, nickname, nickname_tag, created_at, updated_at) VALUES
+('01HJQ5X2Y7A3F3ZP4R1G9S701', '집중맨',   '0421', NOW(), NOW()),
+('01HJQ5X2Y7A3F3ZP4R1G9S702', '꾸준이',   '8877', NOW(), NOW()),
+('01HJQ5X2Y7A3F3ZP4R1G9S703', '집중못해', '3355', NOW(), NOW()),
+('01HJQ5X2Y7A3F3ZP4R1G9S704', '파이팅',   '9910', NOW(), NOW());
+
+-- 더미 세션 (각 유저별 1회 기록)
+-- 2위: 85분 (5100초)  → 시작: 2시간 전, 종료: 35분 전
+INSERT INTO focus_session (anon_id, started_at,                 ended_at,                      duration_sec, created_at) VALUES
+('01HJQ5X2Y7A3F3ZP4R1G9S701', NOW() - INTERVAL 2 HOUR,          NOW() - INTERVAL 35 MINUTE,    5100,         NOW());
+
+-- 3위: 72분 (4320초)  → 시작: 3시간 전, 종료: 108분 전
+INSERT INTO focus_session (anon_id, started_at,                 ended_at,                      duration_sec, created_at) VALUES
+('01HJQ5X2Y7A3F3ZP4R1G9S702', NOW() - INTERVAL 3 HOUR,          NOW() - INTERVAL 108 MINUTE,   4320,         NOW());
+
+-- 4위: 55분 (3300초)  → 시작: 4시간 전, 종료: 185분 전
+INSERT INTO focus_session (anon_id, started_at,                 ended_at,                      duration_sec, created_at) VALUES
+('01HJQ5X2Y7A3F3ZP4R1G9S703', NOW() - INTERVAL 4 HOUR,          NOW() - INTERVAL 185 MINUTE,   3300,         NOW());
+
+-- 5위: 40분 (2400초)  → 시작: 5시간 전, 종료: 260분 전
+INSERT INTO focus_session (anon_id, started_at,                 ended_at,                      duration_sec, created_at) VALUES
+('01HJQ5X2Y7A3F3ZP4R1G9S704', NOW() - INTERVAL 5 HOUR,          NOW() - INTERVAL 260 MINUTE,   2400,         NOW());
+
+INSERT INTO daily_aggregate (target_date, anon_id, total_seconds, updated_at) VALUES
+(CURDATE(), '01HJQ5X2Y7A3F3ZP4R1G9S701', 5100, NOW()),
+(CURDATE(), '01HJQ5X2Y7A3F3ZP4R1G9S702', 4320, NOW()),
+(CURDATE(), '01HJQ5X2Y7A3F3ZP4R1G9S703', 3300, NOW()),
+(CURDATE(), '01HJQ5X2Y7A3F3ZP4R1G9S704', 2400, NOW());

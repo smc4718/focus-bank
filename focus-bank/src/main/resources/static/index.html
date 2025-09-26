@@ -290,12 +290,51 @@
         table tbody tr:first-child{border-top:none}
         table td:last-child{text-align:right;font-variant-numeric:tabular-nums}
 
-        #weeklyRanking tbody tr:nth-child(1) td:first-child,
-        #overallRanking tbody tr:nth-child(1) td:first-child{color:gold;font-weight:bold}
-        #weeklyRanking tbody tr:nth-child(2) td:first-child,
-        #overallRanking tbody tr:nth-child(2) td:first-child{color:silver;font-weight:bold}
-        #weeklyRanking tbody tr:nth-child(3) td:first-child,
-        #overallRanking tbody tr:nth-child(3) td:first-child{color:#cd7f32;font-weight:bold}
+        /* 모든 사용자 셀은 동일한 위치에서 시작 */
+        #weeklyRanking td:nth-child(2),
+        #overallRanking td:nth-child(2) {
+            position: relative;
+            padding-left: 0.5em; /* 기본 여백 */
+        }
+
+        /* 1위 메달 */
+        #weeklyRanking tbody tr:nth-child(1) td:nth-child(2)::before,
+        #overallRanking tbody tr:nth-child(1) td:nth-child(2)::before {
+            content: "🥇";
+            position: absolute;
+            left: -1.2em;
+        }
+        /* 2위 메달 */
+        #weeklyRanking tbody tr:nth-child(2) td:nth-child(2)::before,
+        #overallRanking tbody tr:nth-child(2) td:nth-child(2)::before {
+            content: "🥈";
+            position: absolute;
+            left: -1.2em;
+        }
+        /* 3위 메달 */
+        #weeklyRanking tbody tr:nth-child(3) td:nth-child(2)::before,
+        #overallRanking tbody tr:nth-child(3) td:nth-child(2)::before {
+            content: "🥉";
+            position: absolute;
+            left: -1.2em;
+        }
+
+        /* === 1~3위 색상 강조 === */
+        #weeklyRanking tbody tr:nth-child(1) td,
+        #overallRanking tbody tr:nth-child(1) td {
+            color: gold;
+            font-weight: bold;
+        }
+        #weeklyRanking tbody tr:nth-child(2) td,
+        #overallRanking tbody tr:nth-child(2) td {
+            color: silver;
+            font-weight: bold;
+        }
+        #weeklyRanking tbody tr:nth-child(3) td,
+        #overallRanking tbody tr:nth-child(3) td {
+            color: #cd7f32; /* 브론즈 */
+            font-weight: bold;
+        }
 
         /* ==== 모달 공통 ==== */
         .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
