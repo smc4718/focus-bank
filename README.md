@@ -48,19 +48,66 @@
 - **세션 기록**
   - 입금(시작) / 정산(종료)로 집중 시간 기록
   - 진행 중 세션 실시간 타이머 표시
+<table>
+  <tr>
+    <td><img src="docs/profile.png" alt="프로필" width="300"/></td>
+    <td><img src="docs/ready.png" alt="입금대기" width="300"/></td>
+    <td><img src="docs/start.png" alt="입금시작" width="300"/></td>
+  </tr>
+</table>
+<br/>
+
 - **리포트**
   - 오늘 합계, 주/월 합계
   - 각 회차(오늘) 막대 차트
+<table>
+  <tr>
+    <td><img src="docs/total.png" alt="일/주/월 합계" width="600"/></td>
+    <td><img src="docs/graph.png" alt="각 회차 집중" width="800"/></td>
+  </tr>
+</table>
+<br/>    
+
 - **목표 관리**
   - 일간/주간/월간 목표 설정(업서트)
   - 목표 진행률 조회
+<table>
+  <tr>
+    <td><img src="docs/Goalprocess2.png" alt="일/주/월 목표설정" width="800"/></td>
+    <td><img src="docs/Goalprocess.png" alt="목표 진행률" width="1100"/></td>
+  </tr>
+</table>
+<br/> 
+    
 - **랭킹**
   - 주간 / 전체 누적 TOP N
+<table>
+  <tr>
+    <td><img src="docs/ranking.png" alt="주간 / 전체 누적" width="700"/></td>
+  </tr>
+</table>
+<br/> 
+ 
+    
 - **프로필(익명)**
-  - `X-ANON-ID` 기반, 닉네임 + 태그 지원
+  - `X-ANON-ID` 기반, 닉네임 + 태그 지원 (초기 닉네임 미설정시 ANON-ID로 표시됨)
+<table>
+  <tr>
+    <td><img src="docs/name.png" alt="닉네임 설정" width="500"/></td>
+    <td><img src="docs/name_complete.png" alt="닉네임 변경" width="300"/></td>
+  </tr>
+</table>
+<br/> 
+    
 - **QR 코드로 세션 연동**
-  - 현재 기기의 익명 ID가 포함된 URL을 QR로 생성 → 다른 기기에서 **동일 세션** 이어서 사용
-
+- 현재 기기의 익명 ID가 포함된 URL을 QR로 생성 → 다른 기기에서 **동일 세션** 이어서 사용
+<table>
+  <tr>
+    <td><img src="docs/qr.png" alt="QR 아이콘" width="50"/></td>
+    <td><img src="docs/QRcode.png" alt="QR 코드 연동" width="500"/></td>
+  </tr>
+</table>
+<br/> 
 ---
 
 ## 🧱 기술 스택
