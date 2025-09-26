@@ -37,8 +37,3 @@ sequenceDiagram
 ## 설정
 - `application.yml`: profile, Jackson timezone/format, Actuator 일부 노출
 - `application-dev.yml`: 데이터소스(HikariCP), MyBatis 설정
-
-## 빌드/배포 팁
-- `./gradlew bootJar` → 단일 JAR
-- 환경별 `application-*.yml` 분리 + Secret 관리
-- Nginx(SSL) 리버스 프록시 / CORS 설정(필요 시)
